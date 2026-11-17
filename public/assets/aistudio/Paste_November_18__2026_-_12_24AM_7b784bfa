@@ -1,0 +1,3717 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAT Bahasa Indonesia — Portal Ujian &amp; Administrasi Bimbel</title>
+
+  <!-- Google Fonts: Inter & Merriweather -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Client-Side Document Libraries: Mammoth.js (DOCX), SheetJS (XLSX/CSV), PDF.js (PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['Merriweather', 'Georgia', 'serif']
+          }
+        }
+      }
+    };
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <style>
+    /* Pelestarian Format Ejaan Bahasa Indonesia secara eksplisit */
+    .formatted-content b,
+    .formatted-content strong {
+      font-weight: 700;
+    }
+    .formatted-content i,
+    .formatted-content em {
+      font-style: italic;
+    }
+    .formatted-content u {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .formatted-content p {
+      margin-bottom: 0.75rem;
+    }
+    .formatted-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Rich Text Editor styling */
+    .rich-editor {
+      min-height: 92px;
+      outline: none;
+      line-height: 1.65;
+    }
+    .rich-editor:empty:before {
+      content: attr(data-placeholder);
+      color: #94a3b8;
+      pointer-events: none;
+      display: block;
+    }
+    .rich-editor b,
+    .rich-editor strong {
+      font-weight: 700;
+    }
+    .rich-editor i,
+    .rich-editor em {
+      font-style: italic;
+    }
+    .rich-editor u {
+      text-decoration: underline;
+    }
+
+    /* Scrollbar halus untuk panel wacana dan soal */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ==================== GLOBAL TOAST NOTIFICATION ==================== -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- ==================== GLOBAL CUSTOM MODAL CONTAINER ==================== -->
+  <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 items-center justify-center p-4 overflow-y-auto hidden">
+    <div id="modal-box" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-fade-in my-auto"></div>
+  </div>
+
+  <!-- ==================== TOP NAVBAR (PORTAL & ADMIN) ==================== -->
+  <header id="main-navbar" class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Brand / Logo Kiri -->
+      <button onclick="app.navigateHome()" class="flex items-center gap-3 text-left group focus:outline-none">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm group-hover:bg-indigo-700 transition shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 block leading-tight">CAT Bahasa Indonesia</span>
+          <span class="text-xs text-slate-500 hidden sm:block">Sistem Evaluasi &amp; Tryout Bimbingan Belajar Privat</span>
+        </div>
+      </button>
+
+      <!-- Tombol Kanan Atas -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span id="db-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200" title="Status Koneksi Database">
+          <span id="db-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="db-status-text">Mode Lokal</span>
+        </span>
+        <button id="btn-refresh-portal" onclick="app.syncFromCloud(true)" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 active:scale-[0.99] transition" title="Muat Ulang Paket Soal Terbaru">
+          <svg id="icon-refresh-portal" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span class="hidden sm:inline">Refresh Soal</span>
+        </button>
+        <button id="btn-admin-nav" onclick="app.handleAdminNavClick()" class="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.99] transition shadow-xs">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          <span id="btn-admin-nav-text">Login Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== VIEW 1: PORTAL SISWA (HALAMAN AWAL) ==================== -->
+  <main id="view-portal" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <!-- Hero Banner -->
+    <div class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-lg mb-8 relative overflow-hidden">
+      <div class="relative z-10 max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-indigo-100 text-xs font-semibold mb-4">
+          <span>📚</span> Portal Ujian Berbasis Komputer (CAT)
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 leading-tight">
+          Uji Pemahaman Literasi, Ejaan (EYD V), &amp; Tata Bahasa Indonesia
+        </h1>
+        <p class="text-indigo-100/90 text-sm sm:text-base leading-relaxed mb-5">
+          Pilih paket soal sesuai jenjang belajarmu, masukkan nama lengkap, kelas, beserta <strong>Token Kuis</strong> dari tutor, dan kerjakan simulasi ujian dengan tampilan wacana berdampingan.
+        </p>
+        <div class="flex flex-wrap items-center gap-2 text-xs text-indigo-200 bg-white/10 border border-white/15 rounded-xl px-3.5 py-2.5 w-fit">
+          <span class="font-semibold text-amber-300">💡 Info Simulasi:</span>
+          <span>Token paket aktif tersedia: <code class="bg-slate-900/60 px-1.5 py-0.5 rounded text-white font-mono">SNBT2026</code>, <code class="bg-slate-900/60 px-1.5 py-0.5 rounded text-white font-mono">SMA2026</code>, <code class="bg-slate-900/60 px-1.5 py-0.5 rounded text-white font-mono">CPNS2026</code></span>
+        </div>
+      </div>
+      <div class="hidden lg:block absolute -right-10 -bottom-12 w-72 h-72 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none"></div>
+    </div>
+
+    <!-- Bar Pencarian & Filter Jenjang -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs mb-6 space-y-4">
+      <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        <!-- Input Pencarian -->
+        <div class="relative flex-1">
+          <svg class="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"></path>
+          </svg>
+          <input
+            id="portal-search-input"
+            type="text"
+            oninput="app.setPortalSearch(this.value)"
+            placeholder="Cari judul paket soal (contoh: Literasi SNBT, EYD V, TWK CPNS)..."
+            class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+          />
+        </div>
+
+        <div class="text-xs font-medium text-slate-500 shrink-0 text-right">
+          Menampilkan <span id="portal-count-label" class="font-bold text-slate-800">0</span> paket aktif
+        </div>
+      </div>
+
+      <!-- Tombol Filter Kategori Jenjang -->
+      <div id="portal-category-filters" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <!-- Katalog Kartu Paket Soal (Hanya Status Published) -->
+    <div id="portal-packages-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </main>
+
+  <!-- ==================== VIEW 2: RUANG UJIAN CAT ==================== -->
+  <section id="view-exam" class="hidden flex-1 flex-col bg-slate-100 min-h-screen select-none">
+    <!-- Top Exam Header -->
+    <div class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <!-- Info Paket & Peserta -->
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <span id="exam-category-badge" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">UTBK / SNBT</span>
+            <h1 id="exam-package-title" class="font-bold text-sm sm:text-base text-slate-900 truncate">Judul Paket Soal</h1>
+          </div>
+          <p class="text-xs text-slate-500 truncate mt-0.5">
+            Peserta: <strong id="exam-student-name" class="text-slate-700">Nama Siswa</strong>
+            <span class="mx-1.5 text-slate-300">•</span>
+            Kelas: <strong id="exam-student-class" class="text-slate-700">-</strong>
+          </p>
+        </div>
+
+        <!-- Kontrol Pelanggaran Anti-Nyontek, Ukuran Huruf, Timer & Tombol Selesai -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+          <!-- Indikator Pelanggaran Anti-Nyontek Real-Time -->
+          <div id="exam-violation-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold" title="Batas maksimal pindah tab/aplikasi adalah 3 kali">
+            <span>🛡️</span>
+            <span class="hidden sm:inline">Pelanggaran:</span>
+            <span id="exam-violation-count">0/3</span>
+          </div>
+
+          <!-- Pengatur Ukuran Huruf (A- / A+) -->
+          <div class="inline-flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200" title="Atur Ukuran Huruf Bacaan &amp; Soal">
+            <button onclick="app.adjustFontSize(-1)" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 hover:bg-white hover:shadow-2xs transition" aria-label="Perkecil huruf">A-</button>
+            <span id="exam-font-label" class="px-1.5 text-[11px] font-semibold text-slate-500 hidden sm:inline">100%</span>
+            <button onclick="app.adjustFontSize(1)" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 hover:bg-white hover:shadow-2xs transition" aria-label="Perbesar huruf">A+</button>
+          </div>
+
+          <!-- Timer Hitung Mundur -->
+          <div id="exam-timer-box" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white font-mono text-sm font-bold shadow-2xs">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span id="exam-timer-text">30:00</span>
+          </div>
+
+          <!-- Tombol Selesai Ujian -->
+          <button onclick="app.confirmFinishExam()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition">
+            Selesai
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Navigasi Mobile (Hanya muncul pada layar HP jika soal memiliki teks bacaan) -->
+      <div id="exam-mobile-tabs" class="lg:hidden border-t border-slate-200 bg-slate-50 px-3 py-2 grid grid-cols-2 gap-2">
+        <button id="tab-mobile-passage" onclick="app.setMobileExamTab('passage')" class="py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-2xs transition">
+          📖 Teks Bacaan
+        </button>
+        <button id="tab-mobile-question" onclick="app.setMobileExamTab('question')" class="py-2 px-3 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 transition">
+          ✍️ Pertanyaan &amp; Opsi
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Split-Screen Container -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex flex-col lg:flex-row gap-4">
+      <!-- Area Kerja Utama (Split Screen: Panel Kiri Bacaan & Panel Kanan Pertanyaan) -->
+      <div id="exam-workspace" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[65vh]">
+        <!-- PANEL KIRI: TEKS BACAAN / WACANA -->
+        <div id="exam-passage-panel" class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col overflow-hidden lg:max-h-[calc(100vh-145px)]">
+          <div class="px-4 py-3 bg-indigo-50/70 border-b border-indigo-100 flex items-center justify-between">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-800 flex items-center gap-1.5">
+              <span>📖</span> Wacana / Teks Bacaan
+            </span>
+            <span class="text-[11px] text-indigo-600 font-medium">Gulir mandiri</span>
+          </div>
+          <div id="exam-passage-content" class="p-5 sm:p-6 overflow-y-auto custom-scroll formatted-content font-serif text-slate-800 leading-relaxed flex-1"></div>
+        </div>
+
+        <!-- PANEL KANAN: PERTANYAAN & PILIHAN GANDA -->
+        <div id="exam-question-panel" class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col overflow-hidden lg:max-h-[calc(100vh-145px)]">
+          <!-- Header Nomor Soal -->
+          <div class="px-4 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-lg bg-indigo-600 text-white font-bold text-xs sm:text-sm">
+                Soal No. <span id="exam-q-number">1</span>
+              </span>
+              <span class="text-xs text-slate-500">dari <span id="exam-q-total">10</span> soal</span>
+            </div>
+
+            <!-- Tombol Ragu-ragu -->
+            <button id="btn-toggle-doubt" onclick="app.toggleDoubt()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition">
+              <span id="doubt-checkbox-icon">☐</span> Ragu-ragu
+            </button>
+          </div>
+
+          <!-- Isi Pertanyaan & Opsi Jawaban (Scrollable) -->
+          <div class="p-5 sm:p-6 overflow-y-auto custom-scroll flex-1 space-y-5">
+            <div id="exam-question-text" class="formatted-content text-slate-900 font-medium leading-relaxed"></div>
+            <div id="exam-options-list" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Footer Navigasi Sebelumnya / Selanjutnya -->
+          <div class="px-4 sm:px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+            <button id="btn-exam-prev" onclick="app.prevQuestion()" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition">
+              ← Sebelumnya
+            </button>
+
+            <button id="btn-exam-next" onclick="app.nextQuestion()" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition">
+              Selanjutnya →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR PETA NAVIGASI NOMOR SOAL -->
+      <aside class="w-full lg:w-64 shrink-0 bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 flex flex-col justify-between lg:max-h-[calc(100vh-145px)]">
+        <div>
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-3 flex items-center justify-between">
+            <span>Navigasi Nomor Soal</span>
+            <span id="exam-answered-summary" class="text-indigo-600 font-bold">0/0</span>
+          </h2>
+
+          <!-- Grid Nomor Soal -->
+          <div id="exam-nav-grid" class="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-5 gap-2 max-h-60 lg:max-h-[42vh] overflow-y-auto custom-scroll pr-1"></div>
+        </div>
+
+        <!-- Legenda Indikator Warna -->
+        <div class="mt-4 pt-3 border-t border-slate-200 space-y-2 text-xs text-slate-600">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-emerald-500 inline-block shrink-0"></span>
+            <span>Sudah dijawab</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-amber-400 inline-block shrink-0"></span>
+            <span>Ragu-ragu</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-md bg-white border border-slate-300 inline-block shrink-0"></span>
+            <span>Belum dijawab</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ==================== VIEW 3: HALAMAN HASIL UJIAN ==================== -->
+  <section id="view-result" class="hidden flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <!-- Kartu Skor Utama -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+      <div class="bg-gradient-to-r from-indigo-600 to-slate-900 p-6 sm:p-8 text-white text-center">
+        <span class="inline-block px-3 py-1 rounded-full bg-white/15 text-xs font-semibold uppercase tracking-wider mb-2">
+          Hasil Evaluasi Ujian CAT
+        </span>
+        <h1 id="result-package-title" class="text-xl sm:text-2xl font-extrabold mb-1">Nama Paket Soal</h1>
+        <p class="text-indigo-200 text-sm">
+          Peserta: <strong id="result-student-name" class="text-white">Nama Siswa</strong>
+          <span class="mx-2 text-indigo-300/60">|</span>
+          Kelas: <strong id="result-student-class" class="text-white">-</strong>
+        </p>
+      </div>
+
+      <div class="p-6 sm:p-8">
+        <!-- Banner Status Pengerjaan & Keterangan Pelanggaran Anti-Nyontek -->
+        <div id="result-violation-banner" class="mb-6 rounded-2xl p-4 border flex items-start sm:items-center gap-3 text-xs sm:text-sm font-semibold bg-emerald-50 border-emerald-200 text-emerald-800">
+          <span id="result-violation-icon" class="text-lg leading-none shrink-0">🛡️</span>
+          <div class="flex-1">
+            <span id="result-violation-title" class="font-extrabold block">Status Pengawasan Ujian</span>
+            <span id="result-violation-desc" class="font-medium">0 kali pelanggaran - Ujian Selesai Normal</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center justify-around gap-6 pb-6 border-b border-slate-200">
+          <!-- Lingkaran Skor Akhir -->
+          <div class="text-center">
+            <div class="w-36 h-36 rounded-full border-8 border-indigo-100 bg-indigo-50/50 flex flex-col items-center justify-center mx-auto shadow-inner">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Skor Akhir</span>
+              <span id="result-score" class="text-4xl font-black text-slate-900 mt-0.5">0</span>
+            </div>
+            <span id="result-predicate" class="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Sangat Baik</span>
+          </div>
+
+          <!-- Statistik Benar / Salah / Kosong -->
+          <div class="grid grid-cols-3 gap-3 sm:gap-5 w-full md:w-auto">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+              <span class="text-2xl sm:text-3xl font-extrabold text-emerald-700 block" id="result-correct">0</span>
+              <span class="text-xs font-semibold text-emerald-800 mt-1 block">Jawaban Benar</span>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-center">
+              <span class="text-2xl sm:text-3xl font-extrabold text-rose-700 block" id="result-wrong">0</span>
+              <span class="text-xs font-semibold text-rose-800 mt-1 block">Jawaban Salah</span>
+            </div>
+            <div class="bg-slate-100 border border-slate-200 rounded-2xl p-4 text-center">
+              <span class="text-2xl sm:text-3xl font-extrabold text-slate-700 block" id="result-blank">0</span>
+              <span class="text-xs font-semibold text-slate-600 mt-1 block">Tidak Dijawab</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p id="result-timestamp-info" class="text-xs text-slate-500">Selesai dikerjakan pada -</p>
+          <button onclick="app.navigateHome()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-xs transition">
+            ← Kembali ke Halaman Awal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rincian Kunci Jawaban & Pembahasan (Muncul jika diaktifkan Admin) -->
+    <div id="result-review-section" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900">Rincian Kunci Jawaban &amp; Pembahasan</h2>
+        <span class="text-xs font-medium text-slate-500">Evaluasi per butir soal</span>
+      </div>
+      <div id="result-review-list" class="space-y-4"></div>
+    </div>
+  </section>
+
+  <!-- ==================== VIEW 4: DASHBOARD ADMIN ==================== -->
+  <section id="view-admin" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header Admin & Sub-Tab Navigasi -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs mb-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-1">
+            🔐 Mode Administrator Terautentikasi
+          </span>
+          <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900">Dashboard Manajemen Bank Soal &amp; Nilai</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="app.navigateHome()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+            Lihat Portal Siswa
+          </button>
+          <button onclick="app.logoutAdmin()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition">
+            Keluar Admin
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Menu Admin -->
+      <div class="flex flex-wrap gap-2 pt-4">
+        <button id="admin-tab-packages" onclick="app.setAdminTab('packages')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-2xs transition">
+          📦 Manajemen Paket &amp; Soal
+        </button>
+        <button id="admin-tab-import" onclick="app.setAdminTab('import')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          📥 Import Soal (PDF / DOCX / Excel)
+        </button>
+        <button id="admin-tab-scores" onclick="app.setAdminTab('scores')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          📊 Rekap Nilai &amp; Backup Data
+        </button>
+        <button id="admin-tab-cloud" onclick="app.setAdminTab('cloud')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          ☁️ Pengaturan Database Cloud
+        </button>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW ADMIN A: MANAJEMEN PAKET & EDITOR SOAL MANUAL -->
+    <div id="admin-panel-packages" class="space-y-6">
+      <!-- Daftar Paket Soal -->
+      <div id="admin-packages-list-view">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 class="text-lg font-bold text-slate-900">Daftar Paket Soal (<span id="admin-pkg-count">0</span>)</h2>
+          <button onclick="app.openPackageFormModal()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-xs transition">
+            <span>+</span> Buat Paket Soal Baru
+          </button>
+        </div>
+
+        <div id="admin-packages-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </div>
+
+      <!-- Editor Soal per Paket (Muncul saat Admin klik "Kelola Soal" pada suatu paket) -->
+      <div id="admin-question-manager-view" class="hidden space-y-6">
+        <div class="bg-indigo-900 text-white rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <button onclick="app.closeQuestionManager()" class="text-xs font-semibold text-indigo-200 hover:text-white mb-1 inline-flex items-center gap-1">
+              ← Kembali ke Daftar Paket
+            </button>
+            <h2 id="qm-package-title" class="text-lg sm:text-xl font-extrabold">Judul Paket</h2>
+            <p id="qm-package-meta" class="text-xs text-indigo-200 mt-0.5">Kategori • Durasi • Token</p>
+          </div>
+          <button onclick="app.resetQuestionForm()" class="px-4 py-2.5 rounded-xl bg-white text-indigo-900 hover:bg-indigo-50 text-xs sm:text-sm font-bold shadow-xs transition shrink-0">
+            + Tambah Soal Baru
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <!-- Form Input / Edit Soal Manual (Rich Text) -->
+          <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 id="qform-heading" class="font-extrabold text-base text-slate-900">Tambah Butir Soal Manual</h3>
+              <span id="qform-edit-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Mode Edit</span>
+            </div>
+
+            <!-- Field 1: Teks Bacaan / Wacana -->
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Teks Bacaan / Wacana <span class="text-slate-400 font-normal">(Opsional)</span>
+                </label>
+                <button type="button" onclick="app.copyPreviousPassage()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition">
+                  📋 Salin Teks Bacaan dari Nomor Sebelumnya
+                </button>
+              </div>
+              <div class="border border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1.5 flex flex-wrap gap-1" data-editor-toolbar="editor-passage"></div>
+                <div id="editor-passage" contenteditable="true" class="rich-editor p-3 text-sm font-serif text-slate-800 max-h-56 overflow-y-auto custom-scroll" data-placeholder="Ketik atau tempel teks bacaan/wacana di sini. Gunakan tombol toolbar untuk huruf miring (istilah asing/judul), tebal, garis bawah, atau KAPITAL..."></div>
+              </div>
+            </div>
+
+            <!-- Field 2: Pertanyaan -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Pertanyaan <span class="text-rose-500">*</span>
+              </label>
+              <div class="border border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1.5 flex flex-wrap gap-1" data-editor-toolbar="editor-question"></div>
+                <div id="editor-question" contenteditable="true" class="rich-editor p-3 text-sm text-slate-900" data-placeholder="Tuliskan pokok pertanyaan di sini..."></div>
+              </div>
+            </div>
+
+            <!-- Field 3: Pilihan Jawaban A - E -->
+            <div class="space-y-3">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Pilihan Jawaban (A – E) <span class="text-slate-400 font-normal">(Kosongkan E jika hanya A–D)</span>
+              </label>
+
+              <div class="space-y-2.5">
+                <!-- Opsi A -->
+                <div class="border border-slate-300 rounded-xl overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-indigo-700">Opsi A *</span>
+                    <div class="flex gap-1" data-editor-toolbar="editor-opt-A"></div>
+                  </div>
+                  <div id="editor-opt-A" contenteditable="true" class="rich-editor !min-h-[44px] p-2.5 text-sm" data-placeholder="Isi pilihan jawaban A..."></div>
+                </div>
+
+                <!-- Opsi B -->
+                <div class="border border-slate-300 rounded-xl overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-indigo-700">Opsi B *</span>
+                    <div class="flex gap-1" data-editor-toolbar="editor-opt-B"></div>
+                  </div>
+                  <div id="editor-opt-B" contenteditable="true" class="rich-editor !min-h-[44px] p-2.5 text-sm" data-placeholder="Isi pilihan jawaban B..."></div>
+                </div>
+
+                <!-- Opsi C -->
+                <div class="border border-slate-300 rounded-xl overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-indigo-700">Opsi C *</span>
+                    <div class="flex gap-1" data-editor-toolbar="editor-opt-C"></div>
+                  </div>
+                  <div id="editor-opt-C" contenteditable="true" class="rich-editor !min-h-[44px] p-2.5 text-sm" data-placeholder="Isi pilihan jawaban C..."></div>
+                </div>
+
+                <!-- Opsi D -->
+                <div class="border border-slate-300 rounded-xl overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-indigo-700">Opsi D *</span>
+                    <div class="flex gap-1" data-editor-toolbar="editor-opt-D"></div>
+                  </div>
+                  <div id="editor-opt-D" contenteditable="true" class="rich-editor !min-h-[44px] p-2.5 text-sm" data-placeholder="Isi pilihan jawaban D..."></div>
+                </div>
+
+                <!-- Opsi E -->
+                <div class="border border-slate-300 rounded-xl overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1 flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-slate-600">Opsi E (Opsional)</span>
+                    <div class="flex gap-1" data-editor-toolbar="editor-opt-E"></div>
+                  </div>
+                  <div id="editor-opt-E" contenteditable="true" class="rich-editor !min-h-[44px] p-2.5 text-sm" data-placeholder="Isi pilihan jawaban E (jika 5 opsi)..."></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Field 4: Kunci Jawaban -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Kunci Jawaban Benar <span class="text-rose-500">*</span>
+              </label>
+              <select id="qform-correct" class="w-full sm:w-48 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="A">Jawaban: A</option>
+                <option value="B">Jawaban: B</option>
+                <option value="C">Jawaban: C</option>
+                <option value="D">Jawaban: D</option>
+                <option value="E">Jawaban: E</option>
+              </select>
+            </div>
+
+            <!-- Field 5: Pembahasan -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Pembahasan Soal
+              </label>
+              <div class="border border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                <div class="bg-slate-50 border-b border-slate-200 px-2.5 py-1.5 flex flex-wrap gap-1" data-editor-toolbar="editor-explanation"></div>
+                <div id="editor-explanation" contenteditable="true" class="rich-editor !min-h-[76px] p-3 text-sm" data-placeholder="Tuliskan penjelasan kaidah EYD V, alasan opsi benar, dan analisis kesalahan opsi lain..."></div>
+              </div>
+            </div>
+
+            <!-- Tombol Simpan Soal -->
+            <div class="pt-2 flex flex-wrap items-center gap-3">
+              <button type="button" onclick="app.saveManualQuestion()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-xs transition">
+                💾 Simpan Butir Soal
+              </button>
+              <button type="button" onclick="app.resetQuestionForm()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition">
+                Reset Form
+              </button>
+            </div>
+          </div>
+
+          <!-- Daftar Soal Tersimpan dalam Paket -->
+          <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 class="font-extrabold text-base text-slate-900">Daftar Butir Soal (<span id="qm-questions-count">0</span>)</h3>
+            </div>
+            <div id="qm-questions-list" class="space-y-3 max-h-[75vh] overflow-y-auto custom-scroll pr-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW ADMIN B: IMPORT OTOMATIS DARI PDF, DOCX, DAN EXCEL -->
+    <div id="admin-panel-import" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">Import Soal Otomatis dari Dokumen</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Unggah file <strong>Excel (.xlsx / .xls / .csv)</strong>, <strong>Word (.docx)</strong>, atau <strong>PDF (.pdf)</strong>. Format ejaan (<em>italic</em>, <strong>bold</strong>, <u>underline</u>, KAPITAL) akan dipertahankan secara otomatis.
+            </p>
+          </div>
+          <button onclick="app.downloadExcelTemplate()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition shrink-0">
+            📥 Unduh Template Excel (.xlsx)
+          </button>
+        </div>
+
+        <!-- Panduan Format Dokumen & Area Dropzone Upload -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+          <div class="lg:col-span-7">
+            <label for="file-import-input" class="border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/40 hover:bg-indigo-50/70 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition">
+              <div class="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mb-3">
+                📄
+              </div>
+              <span class="text-sm sm:text-base font-bold text-slate-900">Klik untuk Memilih File Soal</span>
+              <span class="text-xs text-slate-500 mt-1">Mendukung format: <strong>.xlsx, .xls, .csv, .docx, .pdf</strong></span>
+              <input id="file-import-input" type="file" accept=".xlsx,.xls,.csv,.docx,.pdf" onchange="app.handleFileUpload(event)" class="hidden" />
+            </label>
+            <div id="import-loading-indicator" class="hidden mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800 flex items-center gap-2">
+              <span class="animate-spin inline-block">⏳</span> Sedang mengekstrak teks dan mempertahankan format ejaan dokumen...
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 bg-slate-50 rounded-2xl border border-slate-200 p-4 text-xs text-slate-600 space-y-2.5">
+            <h3 class="font-extrabold text-slate-800 uppercase tracking-wider">Panduan Struktur Dokumen:</h3>
+            <p><strong>1. Excel / CSV:</strong> Gunakan kolom <code class="bg-white px-1 py-0.5 rounded border">Teks Bacaan</code>, <code class="bg-white px-1 py-0.5 rounded border">Pertanyaan</code>, <code class="bg-white px-1 py-0.5 rounded border">Opsi A</code> s.d. <code class="bg-white px-1 py-0.5 rounded border">Opsi E</code>, <code class="bg-white px-1 py-0.5 rounded border">Kunci Jawaban</code>, dan <code class="bg-white px-1 py-0.5 rounded border">Pembahasan</code>. Tag HTML seperti <code class="bg-white px-1 rounded">&lt;i&gt;</code>, <code class="bg-white px-1 rounded">&lt;b&gt;</code>, <code class="bg-white px-1 rounded">&lt;u&gt;</code> juga didukung.</p>
+            <p><strong>2. Word (.docx) &amp; PDF (.pdf):</strong> Format cetak <em>miring</em>, <strong>tebal</strong>, dan <u>garis bawah</u> dari Word/PDF langsung dikonversi. Gunakan pola penomoran <code class="bg-white px-1 rounded">1.</code>, opsi <code class="bg-white px-1 rounded">A. B. C. D. E.</code>, <code class="bg-white px-1 rounded">Kunci: A</code>, dan <code class="bg-white px-1 rounded">Pembahasan: ...</code> (opsional diawali <code class="bg-white px-1 rounded">Wacana: ...</code>).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYAR PRATINJAU HASIL EKSTRAKSI (PREVIEW) -->
+      <div id="import-preview-section" class="bg-white rounded-2xl border-2 border-indigo-500 p-6 shadow-md space-y-6 animate-fade-in hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+              ✓ Berhasil Mengekstrak <span id="preview-extracted-count">0</span> Soal
+            </span>
+            <h3 class="text-lg font-extrabold text-slate-900 mt-1">Pratinjau Hasil Ekstraksi &amp; Pengaturan Paket</h3>
+          </div>
+          <button onclick="app.cancelImportPreview()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 self-start">
+            Batal / Tutup Pratinjau
+          </button>
+        </div>
+
+        <!-- Opsi Tujuan Penyimpanan (Paket Baru atau Tambahkan ke Paket Existing) -->
+        <div class="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-4">
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center gap-2 text-sm font-bold text-slate-800 cursor-pointer">
+              <input type="radio" name="import-target-mode" value="new" checked onchange="app.toggleImportTargetMode()" class="text-indigo-600 focus:ring-indigo-500" />
+              Buat Paket Soal Baru
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm font-bold text-slate-800 cursor-pointer">
+              <input type="radio" name="import-target-mode" value="existing" onchange="app.toggleImportTargetMode()" class="text-indigo-600 focus:ring-indigo-500" />
+              Tambahkan ke Paket yang Sudah Ada
+            </label>
+          </div>
+
+          <!-- Form Paket Baru -->
+          <div id="import-new-pkg-fields" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">Judul Paket Soal *</label>
+              <input id="imp-pkg-title" type="text" placeholder="Contoh: Tryout UTBK Literasi Bahasa Indonesia" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Kategori Jenjang</label>
+              <select id="imp-pkg-category" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                <option value="SMP">SMP</option>
+                <option value="SMA">SMA</option>
+                <option value="UTBK / SNBT" selected>UTBK / SNBT</option>
+                <option value="Kedinasan / CPNS">Kedinasan / CPNS</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Durasi (Menit)</label>
+              <input id="imp-pkg-duration" type="number" min="1" value="30" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Token Kuis</label>
+              <div class="flex gap-1">
+                <input id="imp-pkg-token" type="text" value="INDO2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono uppercase bg-white" />
+                <button type="button" onclick="document.getElementById('imp-pkg-token').value = app.generateRandomToken()" class="px-2.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold" title="Acak Token">🎲</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Status Paket</label>
+              <select id="imp-pkg-status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+                <option value="Published" selected>Published (Tampil)</option>
+                <option value="Draft">Draft (Sembunyi)</option>
+                <option value="Closed">Closed (Ditutup)</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2 flex items-center pt-4">
+              <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input id="imp-pkg-explanation" type="checkbox" checked class="rounded text-indigo-600" />
+                Tampilkan kunci jawaban &amp; pembahasan setelah siswa selesai
+              </label>
+            </div>
+          </div>
+
+          <!-- Dropdown Paket Existing -->
+          <div id="import-existing-pkg-fields" class="hidden">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Paket Tujuan</label>
+            <select id="imp-existing-pkg-select" class="w-full sm:w-96 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white"></select>
+          </div>
+        </div>
+
+        <!-- Daftar Soal Pratinjau -->
+        <div id="import-preview-list" class="space-y-4 max-h-[55vh] overflow-y-auto custom-scroll pr-1"></div>
+
+        <!-- Tombol Konfirmasi Simpan Hasil Import -->
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <button onclick="app.cancelImportPreview()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold">
+            Batal
+          </button>
+          <button onclick="app.confirmSaveImportedQuestions()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-sm transition">
+            ✓ Konfirmasi &amp; Simpan Semua Soal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW ADMIN C: REKAP NILAI SISWA & BACKUP BANK SOAL -->
+    <div id="admin-panel-scores" class="hidden space-y-6">
+      <!-- Bagian 1: Backup & Restore JSON -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900">Backup &amp; Restore Bank Soal (JSON)</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Cadangkan seluruh paket soal beserta format ejaannya atau pulihkan dari file JSON.</p>
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+          <button onclick="app.exportBankJson()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold transition">
+            📤 Ekspor Bank Soal (.json)
+          </button>
+          <label class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs sm:text-sm font-bold cursor-pointer transition">
+            📥 Impor Bank Soal (.json)
+            <input type="file" accept=".json" onchange="app.importBankJson(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Bagian 2: Rekap Nilai Pengerjaan Siswa -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">Rekap Nilai &amp; Pengawasan Pengerjaan Siswa</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Filter berdasarkan paket soal dan ekspor laporan ke Excel atau CSV.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="app.fetchResultsFromCloud(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold transition shadow-2xs">
+              🔄 Sinkronkan Nilai Terbaru
+            </button>
+            <select id="scores-package-filter" onchange="app.renderScoresTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-medium bg-white">
+              <option value="ALL">Semua Paket Soal</option>
+            </select>
+            <button onclick="app.exportScoresFile('xlsx')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition">
+              📊 Ekspor Excel (.xlsx)
+            </button>
+            <button onclick="app.exportScoresFile('csv')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold border border-slate-300 transition">
+              📄 Ekspor CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Ringkasan Statistik Rekap -->
+        <div id="scores-summary-cards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+
+        <!-- Tabel Rekap Nilai -->
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 bg-slate-50">
+                <th class="py-3 px-4 font-bold">No</th>
+                <th class="py-3 px-4 font-bold">Nama Lengkap Siswa</th>
+                <th class="py-3 px-4 font-bold">Kelas</th>
+                <th class="py-3 px-4 font-bold">Paket Soal</th>
+                <th class="py-3 px-4 font-bold">Waktu Selesai</th>
+                <th class="py-3 px-4 font-bold">Keterangan Pelanggaran</th>
+                <th class="py-3 px-4 font-bold text-center">Benar / Salah</th>
+                <th class="py-3 px-4 font-bold text-center">Skor Akhir</th>
+                <th class="py-3 px-4 font-bold text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="scores-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-VIEW ADMIN D: PENGATURAN DATABASE CLOUD (FIREBASE REALTIME DATABASE) -->
+    <div id="admin-panel-cloud" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Kolom Kiri: Form Koneksi & Unduh File Siap Hosting -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+            <div>
+              <h2 class="text-lg font-extrabold text-slate-900">Sinkronisasi Firebase Realtime Database</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Hubungkan aplikasi ke database online gratis agar soal &amp; nilai siswa otomatis tersinkronisasi antarperangkat.</p>
+            </div>
+            <span id="cloud-panel-status-pill" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span> Mode Lokal
+            </span>
+          </div>
+
+          <!-- Status Box Detail -->
+          <div id="cloud-connection-detail-box" class="rounded-xl p-4 bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+            <p class="font-bold text-slate-900">Status Koneksi Saat Ini:</p>
+            <p id="cloud-connection-detail-text">Belum terhubung ke Firebase. Data soal dan nilai siswa saat ini hanya tersimpan di LocalStorage perangkat ini.</p>
+          </div>
+
+          <!-- Input URL Firebase -->
+          <div class="space-y-3">
+            <label for="cloud-url-input" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+              URL Firebase Realtime Database <span class="text-rose-500">*</span>
+            </label>
+            <input
+              id="cloud-url-input"
+              type="url"
+              placeholder="Contoh: https://cat-bimbel-default-rtdb.asia-southeast1.firebasedatabase.app"
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+            <div class="flex flex-wrap items-center gap-2.5 pt-1">
+              <button type="button" onclick="app.connectAndSyncFirebase()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-xs transition">
+                🔗 Hubungkan &amp; Sinkronkan Sekarang
+              </button>
+              <button type="button" onclick="app.disconnectFirebase()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition">
+                Putuskan Koneksi
+              </button>
+            </div>
+          </div>
+
+          <!-- Kotak Unduh index.html Siap Hosting -->
+          <div class="pt-5 border-t border-slate-200 space-y-3">
+            <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 sm:p-5 space-y-3">
+              <div class="flex items-start gap-3">
+                <span class="text-2xl leading-none">🚀</span>
+                <div>
+                  <h3 class="text-sm sm:text-base font-extrabold text-emerald-950">Ekspor File Hosting Siap Pakai (Netlify / GitHub Pages)</h3>
+                  <p class="text-xs text-emerald-900/90 mt-1 leading-relaxed">
+                    Tombol di bawah ini otomatis menyisipkan URL Firebase Anda ke dalam konstanta <code class="bg-white/80 px-1.5 py-0.5 rounded font-mono font-bold">DEFAULT_FIREBASE_URL</code> dan mengunduh file <strong>index.html</strong> yang siap langsung di-upload tanpa perlu mengedit kode secara manual.
+                  </p>
+                </div>
+              </div>
+              <button type="button" onclick="app.downloadHostingReadyHtml()" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition inline-flex items-center justify-center gap-2">
+                <span>📥 Unduh index.html Siap Hosting</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Panduan Singkat Setup Firebase Gratis -->
+        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
+          <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <span>📘</span> Panduan Setup Firebase Gratis (3 Menit)
+          </h3>
+          <ol class="space-y-3 text-xs sm:text-sm text-slate-600 list-decimal list-inside leading-relaxed">
+            <li>
+              Buka <strong class="text-slate-900">console.firebase.google.com</strong>, login dengan akun Google Anda, lalu klik <strong>Create a project</strong> (buat proyek baru).
+            </li>
+            <li>
+              Di menu sebelah kiri, pilih <strong>Build → Realtime Database</strong>, lalu klik tombol <strong>Create Database</strong>.
+            </li>
+            <li>
+              Pilih lokasi server terdekat (misalnya <em>Singapore / asia-southeast1</em>), lalu pada pengaturan keamanan pilih <strong>Start in test mode</strong> agar aplikasi dapat membaca &amp; menulis data secara otomatis.
+            </li>
+            <li>
+              Salin tautan URL database yang muncul di bagian atas tabel data (berakhiran <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-xs">.firebaseio.com</code> atau <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-xs">.firebasedatabase.app</code>).
+            </li>
+            <li>
+              Tempelkan URL tersebut pada kolom di sebelah kiri, klik <strong>Hubungkan &amp; Sinkronkan Sekarang</strong>, lalu klik <strong>Unduh index.html Siap Hosting</strong> untuk di-upload ke Netlify Drop atau GitHub Pages.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer id="main-footer" class="bg-white border-t border-slate-200 py-5 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <span>© 2026 <strong>CAT Bahasa Indonesia</strong> — Platform Evaluasi Bimbingan Belajar Privat</span>
+      <span>Mendukung Pelestarian Ejaan Bahasa Indonesia (EYD Edisi V)</span>
+    </div>
+  </footer>
+
+  <!-- ==================== APPLICATION LOGIC ==================== -->
+  <script>
+    // ==================== 0. KONFIGURASI DATABASE CLOUD (FIREBASE REALTIME DATABASE) ====================
+    const DEFAULT_FIREBASE_URL = "";
+
+    // ==================== 1. KONSTANTA STORAGE & DATA CONTOH SIAP PAKAI ====================
+    const STORAGE_KEYS = {
+      PACKAGES: 'cat_bahasa_indonesia_packages_v1',
+      RESULTS: 'cat_bahasa_indonesia_results_v1',
+      FIREBASE_URL: 'cat_bahasa_indonesia_firebase_url_v1'
+    };
+
+    const INITIAL_PACKAGES = [
+      {
+        id: 'pkg-snbt-literasi-01',
+        title: 'Tryout UTBK-SNBT: Literasi Teks & Kaidah EYD Edisi V',
+        category: 'UTBK / SNBT',
+        duration: 25,
+        token: 'SNBT2026',
+        status: 'Published',
+        showExplanation: true,
+        createdAt: '2026-03-01T08:00:00.000Z',
+        questions: [
+          {
+            id: 'q-snbt-1',
+            passage: `<p>Perkembangan teknologi kecerdasan artifisial atau <i>artificial intelligence</i> (AI) telah mengubah lanskap penulisan akademik di perguruan tinggi. Banyak mahasiswa memanfaatkan perangkat lunak pemrosesan bahasa alami untuk menyusun kerangka tulisan maupun melakukan parafrasa otomatis.</p><p>Namun, Badan Pengembangan dan Pembinaan Bahasa mengingatkan bahwa ketergantungan penuh pada mesin penerjemah sering memicu pelanggaran kaidah <u>Ejaan Bahasa Indonesia yang Disempurnakan (EYD) Edisi V</u>. Istilah asing yang belum diserap sepenuhnya wajib dicetak <i>miring</i>, sedangkan kata serapan yang telah baku harus ditulis sesuai pedoman tanpa tanda petik maupun cetak miring.</p>`,
+            question: `Berdasarkan wacana di atas, penulisan kalimat yang <b>PALING TEPAT</b> sesuai kaidah EYD Edisi V adalah ....`,
+            options: {
+              A: `Para mahasiswa sedang mengikuti <i>workshop</i> penulisan artikel ilmiah di perpustakaan pusat.`,
+              B: `Pemanfaatan <b>artificial intelligence</b> dalam riset harus diawasi secara ketat oleh dosen pembimbing.`,
+              C: `Tim peneliti melakukan <u>analisa</u> data menggunakan perangkat lunak <i>open source</i> terbaru.`,
+              D: `Seluruh peserta seminar wajib mengunggah salindia presentasi melalui tautan daring sebelum acara dimulai.`,
+              E: `Ia mengunduh jurnal internasional tersebut melalui jaringan <i>wi-fi</i> kampus kemarin sore.`
+            },
+            correctAnswer: 'D',
+            explanation: `Opsi <b>D</b> tepat karena kata <b>salindia</b> (padanan resmi <i>slide</i>) dan <b>daring</b> sudah baku dalam KBBI sehingga tidak perlu dicetak miring. Pada opsi A dan E, istilah asing <i>workshop</i> dan <i>wi-fi</i> sebaiknya dipadankan (<i>lokakarya</i> dan <i>nirkabel</i>); opsi B menggunakan cetak tebal alih-alih miring untuk istilah asing; opsi C menggunakan bentuk tidak baku <i>analisa</i> (seharusnya <b>analisis</b>).`
+          },
+          {
+            id: 'q-snbt-2',
+            passage: `<p>Perkembangan teknologi kecerdasan artifisial atau <i>artificial intelligence</i> (AI) telah mengubah lanskap penulisan akademik di perguruan tinggi. Banyak mahasiswa memanfaatkan perangkat lunak pemrosesan bahasa alami untuk menyusun kerangka tulisan maupun melakukan parafrasa otomatis.</p><p>Namun, Badan Pengembangan dan Pembinaan Bahasa mengingatkan bahwa ketergantungan penuh pada mesin penerjemah sering memicu pelanggaran kaidah <u>Ejaan Bahasa Indonesia yang Disempurnakan (EYD) Edisi V</u>. Istilah asing yang belum diserap sepenuhnya wajib dicetak <i>miring</i>, sedangkan kata serapan yang telah baku harus ditulis sesuai pedoman tanpa tanda petik maupun cetak miring.</p>`,
+            question: `Gagasan utama paragraf kedua pada teks bacaan tersebut adalah ....`,
+            options: {
+              A: `Larangan penggunaan kecerdasan artifisial bagi mahasiswa tingkat akhir.`,
+              B: `Peringatan mengenai potensi pelanggaran kaidah EYD Edisi V akibat ketergantungan pada mesin penerjemah.`,
+              C: `Kewajiban mencetak miring seluruh kata serapan dari bahasa Inggris dalam karya ilmiah.`,
+              D: `Peran Badan Pengembangan dan Pembinaan Bahasa dalam menciptakan aplikasi parafrasa.`,
+              E: `Perbedaan mendasar antara istilah asing dan kata baku dalam Kamus Besar Bahasa Indonesia.`
+            },
+            correctAnswer: 'B',
+            explanation: `Kalimat utama paragraf kedua terletak pada bagian awal (deduktif), yaitu peringatan Badan Bahasa bahwa ketergantungan penuh pada mesin penerjemah memicu pelanggaran kaidah EYD Edisi V.`
+          }
+        ]
+      },
+      {
+        id: 'pkg-sma-sintaksis-01',
+        title: 'Pendalaman Materi SMA: Kalimat Efektif & Makna Imbuhan',
+        category: 'SMA',
+        duration: 20,
+        token: 'SMA2026',
+        status: 'Published',
+        showExplanation: true,
+        createdAt: '2026-03-02T09:30:00.000Z',
+        questions: [
+          {
+            id: 'q-sma-1',
+            passage: `<p>Sastra klasik Nusantara menyimpan kekayaan nilai moral yang relevan hingga era modern. Dalam karya sastra Melayu klasik seperti <i>Hikayat Hang Tuah</i>, kesetiaan dan kebijaksanaan tokoh utama sering diuji melalui berbagai konflik istana yang kompleks.</p>`,
+            question: `Perhatikan kalimat berikut: <i>"Bagi seluruh siswa-siswi kelas XII diharapkan segera berkumpul di aula utama."</i><br/>Perbaikan yang tepat agar kalimat tersebut menjadi <b>kalimat efektif</b> adalah ....`,
+            options: {
+              A: `Menghilangkan kata <i>bagi</i> dan mengubah <i>siswa-siswi</i> menjadi <i>siswa</i>.`,
+              B: `Mengganti kata <i>diharapkan</i> menjadi <i>mengharapkan</i> tanpa menghapus kata <i>bagi</i>.`,
+              C: `Menambahkan tanda koma setelah kata <i>XII</i> agar subjeknya jelas.`,
+              D: `Mengubah kata <i>segera</i> menjadi <i>dengan segera</i> untuk penegasan.`,
+              E: `Mengganti kata <i>di</i> menjadi <i>pada</i> sebelum kata <i>aula utama</i>.`
+            },
+            correctAnswer: 'A',
+            explanation: `Penggunaan preposisi <i>bagi</i> di awal kalimat menghilangkan fungsi subjek (kalimat menjadi tidak bersubjek). Selain itu, bentuk <i>seluruh siswa-siswi</i> bersifat pleonastis (jamak ganda), sehingga cukup ditulis <b>Seluruh siswa</b>.`
+          }
+        ]
+      },
+      {
+        id: 'pkg-cpns-twk-01',
+        title: 'Simulasi SKD Kedinasan & CPNS: Bahasa Negara & Penalaran Logis',
+        category: 'Kedinasan / CPNS',
+        duration: 30,
+        token: 'CPNS2026',
+        status: 'Published',
+        showExplanation: true,
+        createdAt: '2026-03-03T10:15:00.000Z',
+        questions: [
+          {
+            id: 'q-cpns-1',
+            passage: ``,
+            question: `Manakah penulisan judul makalah berikut yang <b>SESUAI</b> dengan aturan penggunaan huruf KAPITAL dalam EYD Edisi V?`,
+            options: {
+              A: `Strategi Penguatan Literasi Digital Di Kalangan Aparatur Sipil Negara`,
+              B: `Strategi Penguatan Literasi Digital di Kalangan Aparatur Sipil Negara`,
+              C: `Strategi Penguatan Literasi Digital Di kalangan Aparatur Sipil Negara`,
+              D: `STRATEGI PENGUATAN LITERASI DIGITAL DI KALANGAN APARATUR SIPIL NEGARA`,
+              E: `Strategi penguatan literasi digital di kalangan aparatur sipil negara`
+            },
+            correctAnswer: 'B',
+            explanation: `Sesuai kaidah EYD Edisi V, setiap kata dalam judul ditulis dengan huruf awal kapital, <b>kecuali</b> kata tugas (seperti preposisi <i>di, ke, dari, dalam</i>) yang tidak berada di posisi awal judul.`
+          }
+        ]
+      }
+    ];
+
+    const INITIAL_RESULTS = [
+      {
+        id: 'res-sample-01',
+        packageId: 'pkg-snbt-literasi-01',
+        packageTitle: 'Tryout UTBK-SNBT: Literasi Teks & Kaidah EYD Edisi V',
+        category: 'UTBK / SNBT',
+        studentName: 'Alya Putri Maharani',
+        studentClass: 'XII IPA 1',
+        finishedAt: '2026-03-04T14:20:00.000Z',
+        durationUsedSeconds: 780,
+        correctCount: 2,
+        wrongCount: 0,
+        blankCount: 0,
+        totalQuestions: 2,
+        score: 100,
+        violationCount: 0,
+        isBanned: false,
+        examStatus: '0 kali pelanggaran - Ujian Selesai Normal'
+      }
+    ];
+
+    // ==================== 2. SANITIZER & HELPER FORMAT EJAAN ====================
+    function sanitizeFormattedHtml(rawHtml) {
+      if (rawHtml === null || rawHtml === undefined) return '';
+      const str = String(rawHtml).trim();
+      if (!str) return '';
+
+      const template = document.createElement('template');
+      template.innerHTML = str;
+
+      const allowedTags = new Set([
+        'B', 'STRONG', 'I', 'EM', 'U', 'P', 'BR', 'UL', 'OL', 'LI', 'SPAN', 'DIV'
+      ]);
+
+      const cleanNode = (parent) => {
+        const children = Array.from(parent.childNodes);
+        for (const node of children) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.tagName.toUpperCase();
+            if (!allowedTags.has(tag)) {
+              // Ganti tag tidak diizinkan dengan isinya saja (kecuali script/style)
+              if (tag === 'SCRIPT' || tag === 'STYLE') {
+                node.remove();
+              } else {
+                const frag = document.createDocumentFragment();
+                while (node.firstChild) {
+                  frag.appendChild(node.firstChild);
+                }
+                parent.replaceChild(frag, node);
+                cleanNode(parent);
+              }
+            } else {
+              // Hapus semua atribut berbahaya (seperti onclick, onerror, style bebas)
+              Array.from(node.attributes).forEach((attr) => {
+                node.removeAttribute(attr.name);
+              });
+              cleanNode(node);
+            }
+          }
+        }
+      };
+
+      cleanNode(template.content);
+      return template.innerHTML.trim();
+    }
+
+    function stripHtmlToText(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html || '';
+      return (div.textContent || div.innerText || '').trim();
+    }
+
+    function escapeHtmlText(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatDateIndo(isoString) {
+      try {
+        const d = new Date(isoString);
+        return d.toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return isoString;
+      }
+    }
+
+    // ==================== 3. CONTROLLER APLIKASI UTAMA ====================
+    class CATBahasaApp {
+      constructor() {
+        // Muat data dari LocalStorage terlebih dahulu (instant load & fallback offline)
+        this.packages = this.loadFromLocalStorage(STORAGE_KEYS.PACKAGES, INITIAL_PACKAGES);
+        this.results = this.loadFromLocalStorage(STORAGE_KEYS.RESULTS, INITIAL_RESULTS);
+        this.isCloudConnected = false;
+        this.lastCloudSync = null;
+
+        // State Portal Siswa
+        this.portalSearch = '';
+        this.portalCategory = 'Semua';
+
+        // State Ruang Ujian & Sistem Anti-Nyontek
+        this.activeExam = null;
+        this.lastResultData = null;
+        this._boundVisibilityHandler = null;
+        this._boundBlurHandler = null;
+        this._boundContextMenuHandler = null;
+        this._boundCopyCutHandler = null;
+
+        // State Admin
+        this.isAdminAuthenticated = false;
+        this.adminActiveTab = 'packages';
+        this.managingPackageId = null;
+        this.editingQuestionId = null;
+
+        // State Import Dokumen
+        this.importedPreviewQuestions = [];
+
+        this.init();
+      }
+
+      loadFromLocalStorage(key, fallbackData) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+          }
+        } catch (err) {
+          console.warn('Gagal membaca LocalStorage:', err);
+        }
+        const seeded = JSON.parse(JSON.stringify(fallbackData));
+        this.saveToLocalStorage(key, seeded);
+        return seeded;
+      }
+
+      saveToLocalStorage(key, data) {
+        try {
+          localStorage.setItem(key, JSON.stringify(data));
+        } catch (err) {
+          console.warn('Gagal menyimpan ke LocalStorage:', err);
+        }
+      }
+
+      init() {
+        this.initRichTextEditors();
+        this.renderPortal();
+        const activeUrl = this.getActiveFirebaseUrl();
+        if (activeUrl) {
+          this.updateCloudStatusBadge('syncing', 'Menyinkronkan...');
+          this.syncFromCloud(false);
+        } else {
+          this.updateCloudStatusBadge('local', 'Mode Lokal');
+        }
+      }
+
+      // ==================== 3B. SINKRONISASI FIREBASE REALTIME DATABASE ====================
+      getActiveFirebaseUrl() {
+        const stored = (localStorage.getItem(STORAGE_KEYS.FIREBASE_URL) || '').trim();
+        const raw = stored || (DEFAULT_FIREBASE_URL || '').trim();
+        return raw.replace(/\/+$/, '');
+      }
+
+      normalizeFirebaseList(rawData) {
+        if (!rawData) return [];
+        const list = Array.isArray(rawData) ? rawData : Object.values(rawData);
+        return list.filter(Boolean).map((pkg) => {
+          const normalizedQuestions = Array.isArray(pkg.questions)
+            ? pkg.questions.filter(Boolean)
+            : pkg.questions && typeof pkg.questions === 'object'
+            ? Object.values(pkg.questions).filter(Boolean)
+            : [];
+          return {
+            ...pkg,
+            questions: normalizedQuestions
+          };
+        });
+      }
+
+      updateCloudStatusBadge(state, labelText = '') {
+        const badge = document.getElementById('db-status-badge');
+        const dot = document.getElementById('db-status-dot');
+        const textEl = document.getElementById('db-status-text');
+        if (!badge || !dot || !textEl) return;
+
+        if (state === 'connected') {
+          this.isCloudConnected = true;
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+          dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+          textEl.textContent = labelText || 'Cloud Terhubung';
+        } else if (state === 'syncing') {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
+          dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+          textEl.textContent = labelText || 'Menyinkronkan...';
+        } else {
+          this.isCloudConnected = false;
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200';
+          dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+          textEl.textContent = labelText || 'Mode Lokal';
+        }
+      }
+
+      async syncFromCloud(manualNotify = false) {
+        const dbUrl = this.getActiveFirebaseUrl();
+        const refreshIcon = document.getElementById('icon-refresh-portal');
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+        if (!dbUrl) {
+          this.updateCloudStatusBadge('local', 'Mode Lokal');
+          this.renderPortal();
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          if (manualNotify) {
+            this.showToast('Aplikasi berjalan dalam Mode Lokal. Daftar paket dimuat ulang.', 'info');
+          }
+          return false;
+        }
+
+        try {
+          const response = await fetch(`${dbUrl}/packages.json`, { cache: 'no-store' });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          const cloudPackages = this.normalizeFirebaseList(data);
+
+          if (cloudPackages.length > 0) {
+            this.packages = cloudPackages;
+            this.saveToLocalStorage(STORAGE_KEYS.PACKAGES, this.packages);
+          }
+
+          this.lastCloudSync = new Date().toISOString();
+          this.updateCloudStatusBadge('connected', 'Cloud Terhubung');
+          this.renderPortal();
+          if (this.isAdminAuthenticated && this.adminActiveTab === 'packages' && !this.managingPackageId) {
+            this.renderAdminPackages();
+          }
+
+          if (manualNotify) {
+            this.showToast('Daftar paket soal berhasil disinkronkan dari Cloud!', 'success');
+          }
+          return true;
+        } catch (err) {
+          console.warn('Gagal menyinkronkan dari Firebase, menggunakan fallback LocalStorage:', err);
+          this.updateCloudStatusBadge('local', 'Mode Lokal');
+          this.renderPortal();
+          if (manualNotify) {
+            this.showToast('Gagal terhubung ke Cloud. Menggunakan data tersimpan lokal.', 'warning');
+          }
+          return false;
+        } finally {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+        }
+      }
+
+      async pushPackagesToCloud(manualNotify = false) {
+        const dbUrl = this.getActiveFirebaseUrl();
+        if (!dbUrl) return false;
+
+        try {
+          const response = await fetch(`${dbUrl}/packages.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.packages)
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          this.lastCloudSync = new Date().toISOString();
+          this.updateCloudStatusBadge('connected', 'Cloud Terhubung');
+          if (manualNotify) {
+            this.showToast('Bank soal berhasil disimpan ke Firebase Cloud!', 'success');
+          }
+          return true;
+        } catch (err) {
+          console.warn('Gagal mengunggah paket ke Firebase:', err);
+          this.updateCloudStatusBadge('local', 'Mode Lokal');
+          if (manualNotify) {
+            this.showToast('Tersimpan lokal, namun gagal mengirim ke Cloud.', 'warning');
+          }
+          return false;
+        }
+      }
+
+      async pushResultToCloud(resultObj) {
+        const dbUrl = this.getActiveFirebaseUrl();
+        if (!dbUrl) return false;
+
+        try {
+          const payload = { ...resultObj };
+          delete payload._firebaseKey;
+          const response = await fetch(`${dbUrl}/results.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const resJson = await response.json();
+          if (resJson && resJson.name) {
+            const idx = this.results.findIndex((r) => r.id === resultObj.id);
+            if (idx >= 0) {
+              this.results[idx]._firebaseKey = resJson.name;
+              this.saveToLocalStorage(STORAGE_KEYS.RESULTS, this.results);
+            }
+          }
+          this.updateCloudStatusBadge('connected', 'Cloud Terhubung');
+          return true;
+        } catch (err) {
+          console.warn('Gagal mengirim nilai siswa ke Firebase:', err);
+          return false;
+        }
+      }
+
+      async fetchResultsFromCloud(manualNotify = false) {
+        const dbUrl = this.getActiveFirebaseUrl();
+        if (!dbUrl) {
+          if (manualNotify) {
+            this.showToast('Database Cloud belum diatur. Menampilkan data nilai dari penyimpanan lokal.', 'info');
+          }
+          this.renderScoresAdminView();
+          return false;
+        }
+
+        try {
+          const response = await fetch(`${dbUrl}/results.json`, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const raw = await response.json();
+
+          if (raw && typeof raw === 'object') {
+            const cloudEntries = Object.entries(raw)
+              .filter(([, val]) => val && typeof val === 'object')
+              .map(([fbKey, val]) => ({
+                ...val,
+                _firebaseKey: fbKey
+              }));
+
+            const mergedMap = new Map();
+            this.results.forEach((item) => {
+              if (item && item.id) mergedMap.set(item.id, item);
+            });
+            cloudEntries.forEach((item) => {
+              if (item && item.id) {
+                mergedMap.set(item.id, item);
+              }
+            });
+
+            this.results = Array.from(mergedMap.values()).sort(
+              (a, b) => new Date(b.finishedAt || 0) - new Date(a.finishedAt || 0)
+            );
+            this.saveToLocalStorage(STORAGE_KEYS.RESULTS, this.results);
+          }
+
+          this.updateCloudStatusBadge('connected', 'Cloud Terhubung');
+          this.renderScoresAdminView();
+          if (manualNotify) {
+            this.showToast('Rekap nilai & pelanggaran siswa berhasil disinkronkan dari Cloud!', 'success');
+          }
+          return true;
+        } catch (err) {
+          console.warn('Gagal mengambil rekap nilai dari Firebase:', err);
+          if (manualNotify) {
+            this.showToast('Gagal mengambil data nilai terbaru dari Cloud.', 'warning');
+          }
+          this.renderScoresAdminView();
+          return false;
+        }
+      }
+
+      persistPackage(pkg, skipCloudSync = false) {
+        const idx = this.packages.findIndex((p) => p.id === pkg.id);
+        if (idx >= 0) {
+          this.packages[idx] = pkg;
+        } else {
+          this.packages.unshift(pkg);
+        }
+        this.saveToLocalStorage(STORAGE_KEYS.PACKAGES, this.packages);
+        if (!skipCloudSync) {
+          this.pushPackagesToCloud(false);
+        }
+      }
+
+      removePackageFromDb(pkgId) {
+        this.packages = this.packages.filter((p) => p.id !== pkgId);
+        this.saveToLocalStorage(STORAGE_KEYS.PACKAGES, this.packages);
+        this.pushPackagesToCloud(false);
+      }
+
+      persistResult(resultObj) {
+        this.results.unshift(resultObj);
+        this.saveToLocalStorage(STORAGE_KEYS.RESULTS, this.results);
+        this.pushResultToCloud(resultObj);
+      }
+
+      removeResultFromDb(resId) {
+        const target = this.results.find((r) => r.id === resId);
+        this.results = this.results.filter((r) => r.id !== resId);
+        this.saveToLocalStorage(STORAGE_KEYS.RESULTS, this.results);
+
+        const dbUrl = this.getActiveFirebaseUrl();
+        if (dbUrl && target && target._firebaseKey) {
+          fetch(`${dbUrl}/results/${target._firebaseKey}.json`, { method: 'DELETE' }).catch(() => {});
+        }
+      }
+
+      // ==================== 4. UI UTILITIES (MODAL, TOAST, VIEW SWITCHER) ====================
+      switchView(viewName) {
+        const views = ['portal', 'exam', 'result', 'admin'];
+        views.forEach((v) => {
+          const el = document.getElementById(`view-${v}`);
+          if (el) {
+            if (v === viewName) {
+              el.classList.remove('hidden');
+              if (v === 'exam') el.classList.add('flex');
+            } else {
+              el.classList.add('hidden');
+              el.classList.remove('flex');
+            }
+          }
+        });
+
+        const nav = document.getElementById('main-navbar');
+        const footer = document.getElementById('main-footer');
+        if (viewName === 'exam') {
+          nav.classList.add('hidden');
+          footer.classList.add('hidden');
+        } else {
+          nav.classList.remove('hidden');
+          footer.classList.remove('hidden');
+        }
+
+        const adminBtnText = document.getElementById('btn-admin-nav-text');
+        adminBtnText.textContent = this.isAdminAuthenticated ? 'Dashboard Admin' : 'Login Admin';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      navigateHome() {
+        this.cleanupExamSecurity();
+        if (this.activeExam && this.activeExam.timerId) {
+          clearInterval(this.activeExam.timerId);
+          this.activeExam = null;
+        }
+        this.switchView('portal');
+        this.renderPortal();
+        if (this.getActiveFirebaseUrl()) {
+          this.syncFromCloud(false);
+        }
+      }
+
+      openModal(htmlContent) {
+        const backdrop = document.getElementById('modal-backdrop');
+        const box = document.getElementById('modal-box');
+        if (!backdrop || !box) return;
+        box.innerHTML = htmlContent;
+        backdrop.classList.remove('hidden');
+        backdrop.classList.add('flex');
+      }
+
+      closeModal() {
+        const backdrop = document.getElementById('modal-backdrop');
+        const box = document.getElementById('modal-box');
+        if (!backdrop || !box) return;
+        backdrop.classList.add('hidden');
+        backdrop.classList.remove('flex');
+        box.innerHTML = '';
+      }
+
+      showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const styles = {
+          success: 'bg-emerald-900 text-white border-emerald-700',
+          error: 'bg-rose-900 text-white border-rose-700',
+          warning: 'bg-amber-900 text-white border-amber-700',
+          info: 'bg-slate-900 text-white border-slate-700'
+        };
+        const icons = {
+          success: '✓',
+          error: '✕',
+          warning: '⚠️',
+          info: 'ℹ️'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold shadow-lg border flex items-center gap-2.5 animate-fade-in ${styles[type] || styles.info}`;
+        toast.innerHTML = `
+          <span class="shrink-0 font-bold">${icons[type] || icons.info}</span>
+          <span class="flex-1 leading-snug">${escapeHtmlText(message)}</span>
+        `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.25s ease';
+          setTimeout(() => toast.remove(), 260);
+        }, 3800);
+      }
+
+      // ==================== 5. PORTAL SISWA (KATALOG & VERIFIKASI TOKEN) ====================
+      setPortalSearch(query) {
+        this.portalSearch = (query || '').toLowerCase().trim();
+        this.renderPortal();
+      }
+
+      setPortalCategory(category) {
+        this.portalCategory = category;
+        this.renderPortal();
+      }
+
+      renderPortal() {
+        const categories = ['Semua', 'SMP', 'SMA', 'UTBK / SNBT', 'Kedinasan / CPNS'];
+        const filterContainer = document.getElementById('portal-category-filters');
+        if (filterContainer) {
+          filterContainer.innerHTML = categories
+            .map((cat) => {
+              const active = this.portalCategory === cat;
+              return `
+                <button
+                  type="button"
+                  onclick="app.setPortalCategory('${cat}')"
+                  class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }"
+                >
+                  ${escapeHtmlText(cat)}
+                </button>
+              `;
+            })
+            .join('');
+        }
+
+        // HANYA tampilkan paket soal berstatus "Published"
+        const publishedPackages = this.packages.filter((pkg) => {
+          if (pkg.status !== 'Published') return false;
+          const matchCat = this.portalCategory === 'Semua' || pkg.category === this.portalCategory;
+          const matchSearch =
+            !this.portalSearch ||
+            (pkg.title || '').toLowerCase().includes(this.portalSearch) ||
+            (pkg.category || '').toLowerCase().includes(this.portalSearch);
+          return matchCat && matchSearch;
+        });
+
+        const countLabel = document.getElementById('portal-count-label');
+        if (countLabel) countLabel.textContent = publishedPackages.length;
+
+        const grid = document.getElementById('portal-packages-grid');
+        if (!grid) return;
+
+        if (publishedPackages.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-2">
+              <div class="text-3xl">📭</div>
+              <h3 class="text-base font-extrabold text-slate-900">Tidak Ada Paket Soal Ditemukan</h3>
+              <p class="text-xs sm:text-sm text-slate-500">Coba ubah kata kunci pencarian, pilih kategori jenjang lain, atau klik <strong>Refresh Soal</strong>.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = publishedPackages
+          .map((pkg) => {
+            const qCount = Array.isArray(pkg.questions) ? pkg.questions.length : 0;
+            return `
+              <article class="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs hover:shadow-md hover:border-indigo-300 transition flex flex-col justify-between space-y-5">
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <span class="px-3 py-1 rounded-lg text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      ${escapeHtmlText(pkg.category)}
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      ● Aktif
+                    </span>
+                  </div>
+
+                  <h2 class="text-lg font-extrabold text-slate-900 leading-snug mb-4">
+                    ${escapeHtmlText(pkg.title)}
+                  </h2>
+
+                  <div class="grid grid-cols-2 gap-2.5 bg-slate-50 rounded-xl p-3 border border-slate-200 text-xs">
+                    <div>
+                      <span class="text-slate-500 block">Jumlah Soal</span>
+                      <strong class="text-slate-900 text-sm">${qCount} Butir</strong>
+                    </div>
+                    <div>
+                      <span class="text-slate-500 block">Durasi Waktu</span>
+                      <strong class="text-slate-900 text-sm">${pkg.duration} Menit</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onclick="app.openStudentLoginModal('${pkg.id}')"
+                  class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-sm font-bold shadow-xs transition flex items-center justify-center gap-2"
+                >
+                  <span>Kerjakan Soal</span>
+                  <span>→</span>
+                </button>
+              </article>
+            `;
+          })
+          .join('');
+      }
+
+      openStudentLoginModal(pkgId) {
+        const pkg = this.packages.find((p) => p.id === pkgId && p.status === 'Published');
+        if (!pkg) {
+          this.showToast('Paket soal tidak tersedia atau sudah ditutup.', 'error');
+          return;
+        }
+        if (!pkg.questions || pkg.questions.length === 0) {
+          this.showToast('Paket soal ini belum memiliki butir pertanyaan.', 'warning');
+          return;
+        }
+
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <span class="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  ${escapeHtmlText(pkg.category)} • ${pkg.questions.length} Soal • ${pkg.duration} Menit
+                </span>
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 mt-1.5 leading-snug">
+                  ${escapeHtmlText(pkg.title)}
+                </h3>
+              </div>
+              <button type="button" onclick="app.closeModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+            </div>
+
+            <!-- Peringatan Aturan Anti-Nyontek -->
+            <div class="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-950 space-y-1">
+              <p class="font-extrabold flex items-center gap-1.5 text-amber-900">
+                <span>🛡️</span> Aturan Pengawasan Ujian (Anti-Nyontek):
+              </p>
+              <p class="leading-relaxed">
+                Selama ujian berlangsung, siswa <strong>dilarang membuka tab browser atau aplikasi lain</strong>. Batas toleransi adalah <strong>3 kali pelanggaran</strong>—pada pelanggaran ke-3 ujian akan <strong>otomatis dibanned dan langsung terkumpul</strong>.
+              </p>
+            </div>
+
+            <form onsubmit="app.verifyAndStartExam(event, '${pkg.id}')" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Nama Lengkap Siswa <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  id="student-login-name"
+                  type="text"
+                  required
+                  placeholder="Contoh: Budi Santoso"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Kelas <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  id="student-login-class"
+                  type="text"
+                  required
+                  placeholder="Contoh: XII IPA 2 / Kelas Privat A"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Token Kuis <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  id="student-login-token"
+                  type="text"
+                  required
+                  placeholder="Masukkan token dari tutor..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono uppercase focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div id="student-login-error" class="hidden text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5">
+                Token kuis tidak sesuai dengan paket soal ini!
+              </div>
+
+              <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button type="button" onclick="app.closeModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                  Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-xs transition">
+                  Mulai Ujian Sekarang →
+                </button>
+              </div>
+            </form>
+          </div>
+        `);
+
+        setTimeout(() => {
+          const nameInp = document.getElementById('student-login-name');
+          if (nameInp) nameInp.focus();
+        }, 60);
+      }
+
+      verifyAndStartExam(event, pkgId) {
+        event.preventDefault();
+        const pkg = this.packages.find((p) => p.id === pkgId && p.status === 'Published');
+        if (!pkg) return;
+
+        const studentName = document.getElementById('student-login-name').value.trim();
+        const studentClass = document.getElementById('student-login-class').value.trim();
+        const inputToken = document.getElementById('student-login-token').value.trim().toUpperCase();
+        const errBox = document.getElementById('student-login-error');
+
+        if (!studentName || !studentClass || !inputToken) {
+          errBox.textContent = 'Nama lengkap, kelas, dan token kuis wajib diisi!';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        if (inputToken !== (pkg.token || '').trim().toUpperCase()) {
+          errBox.textContent = 'Token kuis tidak cocok! Periksa kembali huruf/angka token dari tutor.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        this.closeModal();
+        this.startExam(pkg, studentName, studentClass);
+      }
+
+      // ==================== 6. RUANG UJIAN CAT & SISTEM ANTI-NYONTEK ====================
+      startExam(pkg, studentName, studentClass) {
+        this.cleanupExamSecurity();
+        const totalSeconds = Math.max(1, Number(pkg.duration || 30)) * 60;
+
+        this.activeExam = {
+          pkg: JSON.parse(JSON.stringify(pkg)),
+          studentName,
+          studentClass,
+          currentIndex: 0,
+          answers: {},
+          doubts: {},
+          fontSize: 16,
+          mobileTab: 'passage',
+          totalSeconds,
+          remainingSeconds: totalSeconds,
+          timerId: null,
+          violationCount: 0,
+          lastViolationAt: 0,
+          isBanned: false
+        };
+
+        document.getElementById('exam-category-badge').textContent = pkg.category;
+        document.getElementById('exam-package-title').textContent = pkg.title;
+        document.getElementById('exam-student-name').textContent = studentName;
+        document.getElementById('exam-student-class').textContent = studentClass;
+        document.getElementById('exam-q-total').textContent = pkg.questions.length;
+        document.getElementById('exam-font-label').textContent = '100%';
+
+        this.updateViolationBadgeUI();
+        this.switchView('exam');
+        this.renderExamQuestion();
+        this.startExamTimer();
+        this.setupExamSecurity();
+      }
+
+      setupExamSecurity() {
+        this.cleanupExamSecurity();
+
+        this._boundVisibilityHandler = () => {
+          if (document.hidden && this.activeExam && !this.activeExam.isBanned) {
+            this.registerCheatingViolation('Terdeteksi berpindah tab browser atau menyembunyikan layar ujian.');
+          }
+        };
+
+        this._boundBlurHandler = () => {
+          if (this.activeExam && !this.activeExam.isBanned) {
+            this.registerCheatingViolation('Terdeteksi meninggalkan jendela ujian atau membuka aplikasi lain.');
+          }
+        };
+
+        this._boundContextMenuHandler = (e) => {
+          if (this.activeExam) {
+            e.preventDefault();
+            this.showToast('Klik kanan dinonaktifkan selama ujian berlangsung.', 'warning');
+          }
+        };
+
+        this._boundCopyCutHandler = (e) => {
+          if (this.activeExam) {
+            e.preventDefault();
+            this.showToast('Menyalin atau memotong teks soal tidak diperbolehkan.', 'warning');
+          }
+        };
+
+        document.addEventListener('visibilitychange', this._boundVisibilityHandler);
+        window.addEventListener('blur', this._boundBlurHandler);
+        document.addEventListener('contextmenu', this._boundContextMenuHandler);
+        document.addEventListener('copy', this._boundCopyCutHandler);
+        document.addEventListener('cut', this._boundCopyCutHandler);
+      }
+
+      cleanupExamSecurity() {
+        if (this._boundVisibilityHandler) {
+          document.removeEventListener('visibilitychange', this._boundVisibilityHandler);
+          this._boundVisibilityHandler = null;
+        }
+        if (this._boundBlurHandler) {
+          window.removeEventListener('blur', this._boundBlurHandler);
+          this._boundBlurHandler = null;
+        }
+        if (this._boundContextMenuHandler) {
+          document.removeEventListener('contextmenu', this._boundContextMenuHandler);
+          this._boundContextMenuHandler = null;
+        }
+        if (this._boundCopyCutHandler) {
+          document.removeEventListener('copy', this._boundCopyCutHandler);
+          document.removeEventListener('cut', this._boundCopyCutHandler);
+          this._boundCopyCutHandler = null;
+        }
+      }
+
+      updateViolationBadgeUI() {
+        if (!this.activeExam) return;
+        const count = this.activeExam.violationCount;
+        const badge = document.getElementById('exam-violation-badge');
+        const countEl = document.getElementById('exam-violation-count');
+        if (!badge || !countEl) return;
+
+        countEl.textContent = `${count}/3`;
+        if (count === 0) {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold';
+        } else if (count === 1) {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold';
+        } else {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 text-xs font-bold animate-pulse';
+        }
+      }
+
+      registerCheatingViolation(reason) {
+        if (!this.activeExam || this.activeExam.isBanned) return;
+
+        const now = Date.now();
+        // Cooldown 1500ms agar visibilitychange & blur tidak terhitung ganda pada satu kejadian
+        if (now - this.activeExam.lastViolationAt < 1500) return;
+        this.activeExam.lastViolationAt = now;
+
+        this.activeExam.violationCount += 1;
+        const count = this.activeExam.violationCount;
+        this.updateViolationBadgeUI();
+
+        if (count >= 3) {
+          this.activeExam.isBanned = true;
+          this.closeModal();
+          this.showToast('Pelanggaran ke-3 terdeteksi! Ujian otomatis dibanned dan dikumpulkan.', 'error');
+          this.finishExam(true);
+          return;
+        }
+
+        const remaining = 3 - count;
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <div class="flex items-center gap-3 text-rose-700 border-b border-rose-100 pb-3">
+              <div class="w-11 h-11 rounded-2xl bg-rose-100 flex items-center justify-center text-2xl shrink-0">🚨</div>
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-rose-600 block">Peringatan Anti-Nyontek (${count}/3)</span>
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Pelanggaran Fokus Layar Terdeteksi!</h3>
+              </div>
+            </div>
+
+            <p class="text-sm text-slate-700 leading-relaxed">
+              ${escapeHtmlText(reason)}
+            </p>
+
+            <div class="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-950 leading-relaxed">
+              Sisa toleransi Anda tinggal <strong>${remaining} kali</strong>. Jika mencapai <strong>3 kali pelanggaran</strong>, ujian akan langsung dihentikan (<strong>BANNED</strong>) dan jawaban Anda dikumpulkan otomatis.
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button type="button" onclick="app.closeModal()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-xs transition">
+                Saya Mengerti &amp; Lanjutkan Ujian
+              </button>
+            </div>
+          </div>
+        `);
+      }
+
+      startExamTimer() {
+        if (!this.activeExam) return;
+        if (this.activeExam.timerId) clearInterval(this.activeExam.timerId);
+
+        this.updateTimerUI();
+        this.activeExam.timerId = setInterval(() => {
+          if (!this.activeExam) return;
+          this.activeExam.remainingSeconds -= 1;
+
+          if (this.activeExam.remainingSeconds <= 0) {
+            this.activeExam.remainingSeconds = 0;
+            this.updateTimerUI();
+            clearInterval(this.activeExam.timerId);
+            this.showToast('Waktu pengerjaan telah habis! Jawaban otomatis dikumpulkan.', 'warning');
+            this.finishExam(false);
+            return;
+          }
+
+          this.updateTimerUI();
+        }, 1000);
+      }
+
+      updateTimerUI() {
+        if (!this.activeExam) return;
+        const sec = Math.max(0, this.activeExam.remainingSeconds);
+        const mins = Math.floor(sec / 60);
+        const remSec = sec % 60;
+        const text = `${String(mins).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
+
+        const timerText = document.getElementById('exam-timer-text');
+        const timerBox = document.getElementById('exam-timer-box');
+        if (timerText) timerText.textContent = text;
+
+        if (timerBox) {
+          if (sec <= 60) {
+            timerBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 text-white font-mono text-sm font-bold shadow-2xs animate-pulse';
+          } else {
+            timerBox.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white font-mono text-sm font-bold shadow-2xs';
+          }
+        }
+      }
+
+      adjustFontSize(delta) {
+        if (!this.activeExam) return;
+        const nextSize = Math.min(22, Math.max(13, this.activeExam.fontSize + delta));
+        this.activeExam.fontSize = nextSize;
+        const pct = Math.round((nextSize / 16) * 100);
+        const label = document.getElementById('exam-font-label');
+        if (label) label.textContent = `${pct}%`;
+
+        const passageEl = document.getElementById('exam-passage-content');
+        const questionEl = document.getElementById('exam-question-text');
+        const optionsEl = document.getElementById('exam-options-list');
+        if (passageEl) passageEl.style.fontSize = `${nextSize}px`;
+        if (questionEl) questionEl.style.fontSize = `${nextSize}px`;
+        if (optionsEl) optionsEl.style.fontSize = `${Math.max(13, nextSize - 1)}px`;
+      }
+
+      setMobileExamTab(tab) {
+        if (!this.activeExam) return;
+        this.activeExam.mobileTab = tab;
+        const passagePanel = document.getElementById('exam-passage-panel');
+        const questionPanel = document.getElementById('exam-question-panel');
+        const btnPassage = document.getElementById('tab-mobile-passage');
+        const btnQuestion = document.getElementById('tab-mobile-question');
+
+        if (!passagePanel || !questionPanel) return;
+
+        if (tab === 'passage') {
+          passagePanel.classList.remove('hidden');
+          questionPanel.classList.add('hidden', 'lg:flex');
+          if (btnPassage) btnPassage.className = 'py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-2xs transition';
+          if (btnQuestion) btnQuestion.className = 'py-2 px-3 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 transition';
+        } else {
+          passagePanel.classList.add('hidden', 'lg:flex');
+          questionPanel.classList.remove('hidden');
+          if (btnPassage) btnPassage.className = 'py-2 px-3 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-300 transition';
+          if (btnQuestion) btnQuestion.className = 'py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-2xs transition';
+        }
+      }
+
+      renderExamQuestion() {
+        if (!this.activeExam) return;
+        const { pkg, currentIndex, answers, doubts, fontSize } = this.activeExam;
+        const questions = pkg.questions || [];
+        const q = questions[currentIndex];
+        if (!q) return;
+
+        document.getElementById('exam-q-number').textContent = currentIndex + 1;
+
+        const hasPassage = Boolean(stripHtmlToText(q.passage));
+        const passagePanel = document.getElementById('exam-passage-panel');
+        const questionPanel = document.getElementById('exam-question-panel');
+        const mobileTabs = document.getElementById('exam-mobile-tabs');
+
+        if (hasPassage) {
+          passagePanel.classList.remove('hidden');
+          passagePanel.classList.add('flex');
+          questionPanel.classList.remove('lg:col-span-12');
+          questionPanel.classList.add('lg:col-span-6');
+          if (mobileTabs) mobileTabs.classList.remove('hidden');
+
+          const passageContent = document.getElementById('exam-passage-content');
+          passageContent.innerHTML = sanitizeFormattedHtml(q.passage);
+          passageContent.style.fontSize = `${fontSize}px`;
+          passageContent.scrollTop = 0;
+
+          if (window.innerWidth < 1024) {
+            this.setMobileExamTab(this.activeExam.mobileTab || 'passage');
+          } else {
+            passagePanel.classList.remove('hidden');
+            questionPanel.classList.remove('hidden');
+          }
+        } else {
+          passagePanel.classList.add('hidden');
+          passagePanel.classList.remove('flex');
+          questionPanel.classList.remove('hidden', 'lg:col-span-6');
+          questionPanel.classList.add('lg:col-span-12', 'flex');
+          if (mobileTabs) mobileTabs.classList.add('hidden');
+        }
+
+        const qTextEl = document.getElementById('exam-question-text');
+        qTextEl.innerHTML = sanitizeFormattedHtml(q.question);
+        qTextEl.style.fontSize = `${fontSize}px`;
+
+        const selectedOpt = answers[q.id] || null;
+        const optKeys = ['A', 'B', 'C', 'D', 'E'].filter((key) => {
+          if (key !== 'E') return true;
+          return Boolean(stripHtmlToText(q.options && q.options.E));
+        });
+
+        const optionsList = document.getElementById('exam-options-list');
+        optionsList.style.fontSize = `${Math.max(13, fontSize - 1)}px`;
+        optionsList.innerHTML = optKeys
+          .map((key) => {
+            const isSelected = selectedOpt === key;
+            const rawOpt = (q.options && q.options[key]) || '';
+            return `
+              <button
+                type="button"
+                onclick="app.selectOption('${key}')"
+                class="w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 transition flex items-start gap-3.5 ${
+                  isSelected
+                    ? 'border-indigo-600 bg-indigo-50/70 shadow-2xs'
+                    : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50'
+                }"
+              >
+                <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-extrabold shrink-0 transition ${
+                  isSelected
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 text-slate-700'
+                }">
+                  ${key}
+                </span>
+                <span class="formatted-content flex-1 pt-0.5 text-slate-800 leading-relaxed">
+                  ${sanitizeFormattedHtml(rawOpt)}
+                </span>
+              </button>
+            `;
+          })
+          .join('');
+
+        // Update tombol Ragu-ragu
+        const isDoubt = Boolean(doubts[q.id]);
+        const doubtBtn = document.getElementById('btn-toggle-doubt');
+        const doubtIcon = document.getElementById('doubt-checkbox-icon');
+        if (doubtBtn && doubtIcon) {
+          if (isDoubt) {
+            doubtIcon.textContent = '☑';
+            doubtBtn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-500 bg-amber-400 text-slate-900 shadow-2xs transition';
+          } else {
+            doubtIcon.textContent = '☐';
+            doubtBtn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition';
+          }
+        }
+
+        // Update tombol Sebelumnya / Selanjutnya
+        const prevBtn = document.getElementById('btn-exam-prev');
+        const nextBtn = document.getElementById('btn-exam-next');
+        if (prevBtn) prevBtn.disabled = currentIndex === 0;
+        if (nextBtn) {
+          if (currentIndex === questions.length - 1) {
+            nextBtn.textContent = 'Selesai & Kumpulkan ✓';
+            nextBtn.className = 'inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition';
+          } else {
+            nextBtn.textContent = 'Selanjutnya →';
+            nextBtn.className = 'inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition';
+          }
+        }
+
+        this.renderExamNavGrid();
+      }
+
+      renderExamNavGrid() {
+        if (!this.activeExam) return;
+        const { pkg, currentIndex, answers, doubts } = this.activeExam;
+        const questions = pkg.questions || [];
+
+        const answeredCount = questions.filter((q) => Boolean(answers[q.id])).length;
+        const summaryEl = document.getElementById('exam-answered-summary');
+        if (summaryEl) summaryEl.textContent = `${answeredCount}/${questions.length}`;
+
+        const gridEl = document.getElementById('exam-nav-grid');
+        if (!gridEl) return;
+
+        gridEl.innerHTML = questions
+          .map((q, idx) => {
+            const isCurrent = idx === currentIndex;
+            const isDoubt = Boolean(doubts[q.id]);
+            const isAnswered = Boolean(answers[q.id]);
+
+            let colorClass = 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
+            if (isDoubt) {
+              colorClass = 'bg-amber-400 text-slate-900 border-amber-500';
+            } else if (isAnswered) {
+              colorClass = 'bg-emerald-500 text-white border-emerald-600';
+            }
+
+            const ringClass = isCurrent ? 'ring-2 ring-indigo-600 ring-offset-1' : '';
+
+            return `
+              <button
+                type="button"
+                onclick="app.jumpToQuestion(${idx})"
+                class="h-9 rounded-xl border text-xs font-extrabold transition flex items-center justify-center ${colorClass} ${ringClass}"
+              >
+                ${idx + 1}
+              </button>
+            `;
+          })
+          .join('');
+      }
+
+      selectOption(optKey) {
+        if (!this.activeExam) return;
+        const q = this.activeExam.pkg.questions[this.activeExam.currentIndex];
+        if (!q) return;
+        this.activeExam.answers[q.id] = optKey;
+        this.renderExamQuestion();
+      }
+
+      toggleDoubt() {
+        if (!this.activeExam) return;
+        const q = this.activeExam.pkg.questions[this.activeExam.currentIndex];
+        if (!q) return;
+        this.activeExam.doubts[q.id] = !this.activeExam.doubts[q.id];
+        this.renderExamQuestion();
+      }
+
+      prevQuestion() {
+        if (!this.activeExam) return;
+        if (this.activeExam.currentIndex > 0) {
+          this.activeExam.currentIndex -= 1;
+          this.renderExamQuestion();
+        }
+      }
+
+      nextQuestion() {
+        if (!this.activeExam) return;
+        const total = this.activeExam.pkg.questions.length;
+        if (this.activeExam.currentIndex < total - 1) {
+          this.activeExam.currentIndex += 1;
+          this.renderExamQuestion();
+        } else {
+          this.confirmFinishExam();
+        }
+      }
+
+      jumpToQuestion(index) {
+        if (!this.activeExam) return;
+        if (index >= 0 && index < this.activeExam.pkg.questions.length) {
+          this.activeExam.currentIndex = index;
+          this.renderExamQuestion();
+        }
+      }
+
+      confirmFinishExam() {
+        if (!this.activeExam) return;
+        const questions = this.activeExam.pkg.questions || [];
+        const answeredCount = questions.filter((q) => Boolean(this.activeExam.answers[q.id])).length;
+        const unansweredCount = questions.length - answeredCount;
+
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <h3 class="text-lg font-extrabold text-slate-900">Konfirmasi Pengumpulan Ujian</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              Anda telah menjawab <strong>${answeredCount}</strong> dari <strong>${questions.length}</strong> soal.
+              ${
+                unansweredCount > 0
+                  ? `<span class="text-amber-700 font-semibold block mt-1">Masih ada ${unansweredCount} soal yang belum dijawab.</span>`
+                  : `<span class="text-emerald-700 font-semibold block mt-1">Seluruh soal sudah terisi dengan lengkap.</span>`
+              }
+            </p>
+            <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button type="button" onclick="app.closeModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                Periksa Kembali
+              </button>
+              <button type="button" onclick="app.closeModal(); app.finishExam(false);" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-xs transition">
+                Ya, Kumpulkan Sekarang
+              </button>
+            </div>
+          </div>
+        `);
+      }
+
+      finishExam(isForcedBan = false) {
+        if (!this.activeExam) return;
+        this.cleanupExamSecurity();
+        if (this.activeExam.timerId) {
+          clearInterval(this.activeExam.timerId);
+        }
+
+        const {
+          pkg,
+          studentName,
+          studentClass,
+          answers,
+          totalSeconds,
+          remainingSeconds,
+          violationCount
+        } = this.activeExam;
+
+        const questions = pkg.questions || [];
+        let correctCount = 0;
+        let wrongCount = 0;
+        let blankCount = 0;
+
+        questions.forEach((q) => {
+          const userAns = answers[q.id];
+          if (!userAns) {
+            blankCount += 1;
+          } else if (userAns === q.correctAnswer) {
+            correctCount += 1;
+          } else {
+            wrongCount += 1;
+          }
+        });
+
+        const totalQuestions = questions.length;
+        const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+        const durationUsedSeconds = Math.max(1, totalSeconds - remainingSeconds);
+        const finishedAt = new Date().toISOString();
+
+        const examStatus = isForcedBan
+          ? `${violationCount} kali pelanggaran - BANNED (Ujian Dihentikan & Dikumpulkan Otomatis)`
+          : `${violationCount} kali pelanggaran - Ujian Selesai Normal`;
+
+        const resultRecord = {
+          id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          packageId: pkg.id,
+          packageTitle: pkg.title,
+          category: pkg.category,
+          studentName,
+          studentClass,
+          finishedAt,
+          durationUsedSeconds,
+          correctCount,
+          wrongCount,
+          blankCount,
+          totalQuestions,
+          score,
+          violationCount,
+          isBanned: isForcedBan,
+          examStatus
+        };
+
+        this.persistResult(resultRecord);
+        this.lastResultData = {
+          record: resultRecord,
+          pkg,
+          answers
+        };
+        this.activeExam = null;
+
+        this.renderResultView();
+        this.switchView('result');
+      }
+
+      renderResultView() {
+        if (!this.lastResultData) return;
+        const { record, pkg, answers } = this.lastResultData;
+
+        document.getElementById('result-package-title').textContent = record.packageTitle;
+        document.getElementById('result-student-name').textContent = record.studentName;
+        document.getElementById('result-student-class').textContent = record.studentClass;
+        document.getElementById('result-score').textContent = record.score;
+        document.getElementById('result-correct').textContent = record.correctCount;
+        document.getElementById('result-wrong').textContent = record.wrongCount;
+        document.getElementById('result-blank').textContent = record.blankCount;
+        document.getElementById('result-timestamp-info').textContent = `Selesai dikerjakan pada ${formatDateIndo(record.finishedAt)}`;
+
+        // Predikat Nilai
+        const predEl = document.getElementById('result-predicate');
+        if (record.isBanned) {
+          predEl.textContent = 'Diskualifikasi (Batas Pelanggaran)';
+          predEl.className = 'inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800';
+        } else if (record.score >= 85) {
+          predEl.textContent = 'Sangat Memuaskan';
+          predEl.className = 'inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
+        } else if (record.score >= 70) {
+          predEl.textContent = 'Baik / Lulus KKM';
+          predEl.className = 'inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800';
+        } else {
+          predEl.textContent = 'Perlu Pendalaman Materi';
+          predEl.className = 'inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
+        }
+
+        // Banner Status Pelanggaran Anti-Nyontek
+        const vBanner = document.getElementById('result-violation-banner');
+        const vIcon = document.getElementById('result-violation-icon');
+        const vTitle = document.getElementById('result-violation-title');
+        const vDesc = document.getElementById('result-violation-desc');
+
+        if (record.isBanned) {
+          vBanner.className = 'mb-6 rounded-2xl p-4 border flex items-start sm:items-center gap-3 text-xs sm:text-sm font-semibold bg-rose-50 border-rose-300 text-rose-900';
+          vIcon.textContent = '⛔';
+          vTitle.textContent = 'UJIAN DIBANNED & DIKUMPULKAN OTOMATIS';
+          vDesc.textContent = `Siswa tercatat melakukan ${record.violationCount} kali pelanggaran keluar dari layar/tab ujian.`;
+        } else if (record.violationCount > 0) {
+          vBanner.className = 'mb-6 rounded-2xl p-4 border flex items-start sm:items-center gap-3 text-xs sm:text-sm font-semibold bg-amber-50 border-amber-300 text-amber-900';
+          vIcon.textContent = '⚠️';
+          vTitle.textContent = 'Catatan Pengawasan Ujian';
+          vDesc.textContent = `${record.violationCount} kali pelanggaran terdeteksi — Ujian Selesai Normal.`;
+        } else {
+          vBanner.className = 'mb-6 rounded-2xl p-4 border flex items-start sm:items-center gap-3 text-xs sm:text-sm font-semibold bg-emerald-50 border-emerald-200 text-emerald-800';
+          vIcon.textContent = '🛡️';
+          vTitle.textContent = 'Status Pengawasan Ujian Bersih';
+          vDesc.textContent = '0 kali pelanggaran — Ujian Selesai Normal tanpa berpindah tab/aplikasi.';
+        }
+
+        // Rincian Kunci & Pembahasan
+        const reviewSection = document.getElementById('result-review-section');
+        const reviewList = document.getElementById('result-review-list');
+        if (!pkg.showExplanation) {
+          reviewSection.classList.add('hidden');
+          return;
+        }
+
+        reviewSection.classList.remove('hidden');
+        reviewList.innerHTML = (pkg.questions || [])
+          .map((q, idx) => {
+            const userAns = answers[q.id] || null;
+            const isCorrect = userAns === q.correctAnswer;
+            const statusBadge = !userAns
+              ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">Tidak Dijawab</span>'
+              : isCorrect
+              ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800">✓ Benar</span>'
+              : '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800">✕ Salah</span>';
+
+            const optKeys = ['A', 'B', 'C', 'D', 'E'].filter((k) => k !== 'E' || stripHtmlToText(q.options && q.options.E));
+
+            return `
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <span class="font-extrabold text-sm text-indigo-700">Soal Nomor ${idx + 1}</span>
+                  <div class="flex items-center gap-2 text-xs">
+                    <span>Jawaban Anda: <strong>${userAns || '-'}</strong></span>
+                    <span>•</span>
+                    <span>Kunci: <strong class="text-emerald-700">${q.correctAnswer}</strong></span>
+                    ${statusBadge}
+                  </div>
+                </div>
+
+                ${
+                  stripHtmlToText(q.passage)
+                    ? `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs sm:text-sm font-serif text-slate-700 formatted-content max-h-48 overflow-y-auto custom-scroll">${sanitizeFormattedHtml(q.passage)}</div>`
+                    : ''
+                }
+
+                <div class="formatted-content text-sm sm:text-base font-medium text-slate-900">
+                  ${sanitizeFormattedHtml(q.question)}
+                </div>
+
+                <div class="space-y-1.5 text-xs sm:text-sm">
+                  ${optKeys
+                    .map((k) => {
+                      const isKey = k === q.correctAnswer;
+                      const isPickedWrong = k === userAns && !isKey;
+                      let cls = 'bg-slate-50 border-slate-200 text-slate-700';
+                      if (isKey) cls = 'bg-emerald-50 border-emerald-300 text-emerald-950 font-semibold';
+                      else if (isPickedWrong) cls = 'bg-rose-50 border-rose-300 text-rose-950';
+                      return `
+                        <div class="p-2.5 rounded-xl border flex items-start gap-2.5 ${cls}">
+                          <span class="font-extrabold shrink-0">${k}.</span>
+                          <span class="formatted-content flex-1">${sanitizeFormattedHtml((q.options && q.options[k]) || '')}</span>
+                        </div>
+                      `;
+                    })
+                    .join('')}
+                </div>
+
+                ${
+                  stripHtmlToText(q.explanation)
+                    ? `
+                      <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 text-xs sm:text-sm text-indigo-950 space-y-1">
+                        <span class="font-extrabold text-indigo-800 block uppercase tracking-wider text-[11px]">💡 Pembahasan:</span>
+                        <div class="formatted-content leading-relaxed">${sanitizeFormattedHtml(q.explanation)}</div>
+                      </div>
+                    `
+                    : ''
+                }
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      // ==================== 7. AUTHENTICATION & NAVIGASI ADMIN ====================
+      handleAdminNavClick() {
+        if (this.isAdminAuthenticated) {
+          this.switchView('admin');
+          this.setAdminTab(this.adminActiveTab || 'packages');
+          return;
+        }
+
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-base">🔐</span>
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900">Login Administrator</h3>
+                  <p class="text-xs text-slate-500">Masukkan kata sandi pengelola bank soal</p>
+                </div>
+              </div>
+              <button type="button" onclick="app.closeModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+            </div>
+
+            <form onsubmit="app.verifyAdminPassword(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Kata Sandi Admin
+                </label>
+                <input
+                  id="admin-password-input"
+                  type="password"
+                  required
+                  placeholder="Masukkan kata sandi..."
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div id="admin-login-error" class="hidden text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5">
+                Kata sandi administrator salah!
+              </div>
+
+              <div class="flex justify-end gap-2.5 pt-2">
+                <button type="button" onclick="app.closeModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                  Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold shadow-xs transition">
+                  Masuk Dashboard
+                </button>
+              </div>
+            </form>
+          </div>
+        `);
+
+        setTimeout(() => {
+          const inp = document.getElementById('admin-password-input');
+          if (inp) inp.focus();
+        }, 60);
+      }
+
+      verifyAdminPassword(event) {
+        event.preventDefault();
+        const pwd = document.getElementById('admin-password-input').value;
+        const errBox = document.getElementById('admin-login-error');
+
+        if (pwd === 'UjianKikay21') {
+          this.isAdminAuthenticated = true;
+          this.closeModal();
+          this.switchView('admin');
+          this.setAdminTab('packages');
+          this.showToast('Berhasil masuk ke Dashboard Admin.', 'success');
+        } else {
+          errBox.classList.remove('hidden');
+        }
+      }
+
+      logoutAdmin() {
+        this.isAdminAuthenticated = false;
+        this.managingPackageId = null;
+        this.showToast('Anda telah keluar dari sesi Admin.', 'info');
+        this.navigateHome();
+      }
+
+      setAdminTab(tabName) {
+        this.adminActiveTab = tabName;
+        const tabs = ['packages', 'import', 'scores', 'cloud'];
+        tabs.forEach((t) => {
+          const btn = document.getElementById(`admin-tab-${t}`);
+          const panel = document.getElementById(`admin-panel-${t}`);
+          if (btn) {
+            btn.className =
+              t === tabName
+                ? 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-2xs transition'
+                : 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+          }
+          if (panel) {
+            if (t === tabName) panel.classList.remove('hidden');
+            else panel.classList.add('hidden');
+          }
+        });
+
+        if (tabName === 'packages') {
+          this.closeQuestionManager();
+          this.renderAdminPackages();
+        } else if (tabName === 'import') {
+          this.populateExistingPackageSelect();
+        } else if (tabName === 'scores') {
+          this.renderScoresAdminView();
+          if (this.getActiveFirebaseUrl()) {
+            this.fetchResultsFromCloud(false);
+          }
+        } else if (tabName === 'cloud') {
+          this.renderCloudSettingsPanel();
+        }
+      }
+
+      // ==================== 8. MANAJEMEN PAKET SOAL & EDITOR MANUAL ====================
+      generateRandomToken() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let token = '';
+        for (let i = 0; i < 6; i++) {
+          token += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return token;
+      }
+
+      renderAdminPackages() {
+        const countEl = document.getElementById('admin-pkg-count');
+        if (countEl) countEl.textContent = this.packages.length;
+
+        const grid = document.getElementById('admin-packages-grid');
+        if (!grid) return;
+
+        if (this.packages.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-3">
+              <div class="text-3xl">📦</div>
+              <h3 class="text-base font-extrabold text-slate-900">Belum Ada Paket Soal</h3>
+              <p class="text-xs sm:text-sm text-slate-500">Klik tombol <strong>Buat Paket Soal Baru</strong> atau gunakan fitur <strong>Import Soal</strong>.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = this.packages
+          .map((pkg) => {
+            const qCount = Array.isArray(pkg.questions) ? pkg.questions.length : 0;
+            const statusColors = {
+              Published: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+              Draft: 'bg-amber-100 text-amber-800 border-amber-200',
+              Closed: 'bg-rose-100 text-rose-800 border-rose-200'
+            };
+
+            return `
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between space-y-4">
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-2.5">
+                    <span class="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      ${escapeHtmlText(pkg.category)}
+                    </span>
+                    <select
+                      onchange="app.quickChangePackageStatus('${pkg.id}', this.value)"
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold border outline-none cursor-pointer ${statusColors[pkg.status] || statusColors.Draft}"
+                    >
+                      <option value="Published" ${pkg.status === 'Published' ? 'selected' : ''}>Published</option>
+                      <option value="Draft" ${pkg.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                      <option value="Closed" ${pkg.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                    </select>
+                  </div>
+
+                  <h3 class="font-extrabold text-base text-slate-900 leading-snug mb-3">
+                    ${escapeHtmlText(pkg.title)}
+                  </h3>
+
+                  <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 text-xs space-y-1.5">
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">Jumlah Butir Soal:</span>
+                      <strong class="text-slate-900">${qCount} Soal</strong>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">Durasi Ujian:</span>
+                      <strong class="text-slate-900">${pkg.duration} Menit</strong>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-slate-500">Token Kuis:</span>
+                      <code class="px-2 py-0.5 rounded bg-slate-900 text-amber-300 font-mono font-bold">${escapeHtmlText(pkg.token)}</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onclick="app.openQuestionManager('${pkg.id}')"
+                    class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-2xs transition"
+                  >
+                    ✍️ Kelola Butir Soal (${qCount})
+                  </button>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onclick="app.openPackageFormModal('${pkg.id}')"
+                      class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                    >
+                      ⚙️ Edit Info
+                    </button>
+                    <button
+                      type="button"
+                      onclick="app.confirmDeletePackage('${pkg.id}')"
+                      class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition"
+                    >
+                      🗑️ Hapus
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      quickChangePackageStatus(pkgId, newStatus) {
+        const pkg = this.packages.find((p) => p.id === pkgId);
+        if (!pkg) return;
+        pkg.status = newStatus;
+        this.persistPackage(pkg);
+        this.renderAdminPackages();
+        this.showToast(`Status paket diubah menjadi "${newStatus}".`, 'success');
+      }
+
+      openPackageFormModal(pkgId = null) {
+        const existing = pkgId ? this.packages.find((p) => p.id === pkgId) : null;
+        const defaultToken = existing ? existing.token : this.generateRandomToken();
+
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
+                ${existing ? 'Edit Pengaturan Paket Soal' : 'Buat Paket Soal Baru'}
+              </h3>
+              <button type="button" onclick="app.closeModal()" class="text-slate-400 hover:text-slate-600 font-bold p-1">✕</button>
+            </div>
+
+            <form onsubmit="app.savePackageForm(event, '${existing ? existing.id : ''}')" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Judul Paket Soal <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  id="pkg-form-title"
+                  type="text"
+                  required
+                  value="${existing ? escapeHtmlText(existing.title) : ''}"
+                  placeholder="Contoh: Tryout SNBT Literasi Bahasa Indonesia Paket 2"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Kategori Jenjang</label>
+                  <select id="pkg-form-category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                    ${['SMP', 'SMA', 'UTBK / SNBT', 'Kedinasan / CPNS']
+                      .map(
+                        (cat) =>
+                          `<option value="${cat}" ${existing && existing.category === cat ? 'selected' : ''}>${cat}</option>`
+                      )
+                      .join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Durasi (Menit)</label>
+                  <input
+                    id="pkg-form-duration"
+                    type="number"
+                    min="1"
+                    max="300"
+                    required
+                    value="${existing ? existing.duration : 30}"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Token Kuis</label>
+                  <div class="flex gap-1.5">
+                    <input
+                      id="pkg-form-token"
+                      type="text"
+                      required
+                      value="${escapeHtmlText(defaultToken)}"
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono uppercase"
+                    />
+                    <button
+                      type="button"
+                      onclick="document.getElementById('pkg-form-token').value = app.generateRandomToken()"
+                      class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold border border-slate-300"
+                      title="Acak Token"
+                    >
+                      🎲
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Status Publikasi</label>
+                  <select id="pkg-form-status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+                    <option value="Published" ${!existing || existing.status === 'Published' ? 'selected' : ''}>Published (Tampil di Siswa)</option>
+                    <option value="Draft" ${existing && existing.status === 'Draft' ? 'selected' : ''}>Draft (Disembunyikan)</option>
+                    <option value="Closed" ${existing && existing.status === 'Closed' ? 'selected' : ''}>Closed (Ditutup)</option>
+                  </select>
+                </div>
+              </div>
+
+              <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 pt-1 cursor-pointer">
+                <input
+                  id="pkg-form-explanation"
+                  type="checkbox"
+                  ${!existing || existing.showExplanation ? 'checked' : ''}
+                  class="rounded text-indigo-600"
+                />
+                Tampilkan kunci jawaban &amp; pembahasan pada halaman hasil siswa
+              </label>
+
+              <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <button type="button" onclick="app.closeModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                  Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-xs transition">
+                  Simpan Paket
+                </button>
+              </div>
+            </form>
+          </div>
+        `);
+      }
+
+      savePackageForm(event, existingId) {
+        event.preventDefault();
+        const title = document.getElementById('pkg-form-title').value.trim();
+        const category = document.getElementById('pkg-form-category').value;
+        const duration = Math.max(1, parseInt(document.getElementById('pkg-form-duration').value, 10) || 30);
+        const token = document.getElementById('pkg-form-token').value.trim().toUpperCase();
+        const status = document.getElementById('pkg-form-status').value;
+        const showExplanation = document.getElementById('pkg-form-explanation').checked;
+
+        if (!title || !token) return;
+
+        if (existingId) {
+          const pkg = this.packages.find((p) => p.id === existingId);
+          if (pkg) {
+            pkg.title = title;
+            pkg.category = category;
+            pkg.duration = duration;
+            pkg.token = token;
+            pkg.status = status;
+            pkg.showExplanation = showExplanation;
+            this.persistPackage(pkg);
+          }
+          this.showToast('Pengaturan paket soal berhasil diperbarui.', 'success');
+        } else {
+          const newPkg = {
+            id: 'pkg-' + Date.now(),
+            title,
+            category,
+            duration,
+            token,
+            status,
+            showExplanation,
+            createdAt: new Date().toISOString(),
+            questions: []
+          };
+          this.persistPackage(newPkg);
+          this.showToast('Paket soal baru berhasil dibuat.', 'success');
+        }
+
+        this.closeModal();
+        this.renderAdminPackages();
+      }
+
+      confirmDeletePackage(pkgId) {
+        const pkg = this.packages.find((p) => p.id === pkgId);
+        if (!pkg) return;
+
+        this.openModal(`
+          <div class="p-6 space-y-4">
+            <h3 class="text-lg font-extrabold text-rose-700">Hapus Paket Soal?</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              Paket <strong>"${escapeHtmlText(pkg.title)}"</strong> beserta seluruh <strong>${(pkg.questions || []).length} butir soal</strong> di dalamnya akan dihapus permanen.
+            </p>
+            <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button type="button" onclick="app.closeModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">
+                Batal
+              </button>
+              <button type="button" onclick="app.removePackageFromDb('${pkg.id}'); app.closeModal(); app.renderAdminPackages(); app.showToast('Paket soal dihapus.', 'info');" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold">
+                Ya, Hapus Permanen
+              </button>
+            </div>
+          </div>
+        `);
+      }
+
+      openQuestionManager(pkgId) {
+        const pkg = this.packages.find((p) => p.id === pkgId);
+        if (!pkg) return;
+        this.managingPackageId = pkgId;
+        this.editingQuestionId = null;
+
+        document.getElementById('admin-packages-list-view').classList.add('hidden');
+        document.getElementById('admin-question-manager-view').classList.remove('hidden');
+
+        document.getElementById('qm-package-title').textContent = pkg.title;
+        document.getElementById('qm-package-meta').textContent = `${pkg.category} • ${pkg.duration} Menit • Token: ${pkg.token} • Status: ${pkg.status}`;
+
+        this.resetQuestionForm();
+        this.renderQuestionListInManager();
+      }
+
+      closeQuestionManager() {
+        this.managingPackageId = null;
+        this.editingQuestionId = null;
+        const listView = document.getElementById('admin-packages-list-view');
+        const qmView = document.getElementById('admin-question-manager-view');
+        if (listView) listView.classList.remove('hidden');
+        if (qmView) qmView.classList.add('hidden');
+        this.renderAdminPackages();
+      }
+
+      initRichTextEditors() {
+        const toolbars = document.querySelectorAll('[data-editor-toolbar]');
+        toolbars.forEach((bar) => {
+          const targetId = bar.getAttribute('data-editor-toolbar');
+          bar.innerHTML = `
+            <button type="button" onmousedown="event.preventDefault(); app.execEditorCmd('${targetId}', 'bold')" class="px-2 py-0.5 rounded bg-white hover:bg-indigo-50 border border-slate-200 text-xs font-extrabold text-slate-800" title="Tebal (Bold)">B</button>
+            <button type="button" onmousedown="event.preventDefault(); app.execEditorCmd('${targetId}', 'italic')" class="px-2 py-0.5 rounded bg-white hover:bg-indigo-50 border border-slate-200 text-xs italic font-serif font-bold text-slate-800" title="Miring (Italic)">I</button>
+            <button type="button" onmousedown="event.preventDefault(); app.execEditorCmd('${targetId}', 'underline')" class="px-2 py-0.5 rounded bg-white hover:bg-indigo-50 border border-slate-200 text-xs underline font-bold text-slate-800" title="Garis Bawah (Underline)">U</button>
+            <button type="button" onmousedown="event.preventDefault(); app.transformEditorSelectionUppercase('${targetId}')" class="px-2 py-0.5 rounded bg-white hover:bg-indigo-50 border border-slate-200 text-[11px] font-bold text-slate-800" title="Ubah Teks Terpilih ke Huruf KAPITAL">KAPITAL</button>
+          `;
+        });
+      }
+
+      execEditorCmd(editorId, command) {
+        const el = document.getElementById(editorId);
+        if (!el) return;
+        el.focus();
+        document.execCommand(command, false, null);
+      }
+
+      transformEditorSelectionUppercase(editorId) {
+        const el = document.getElementById(editorId);
+        if (!el) return;
+        el.focus();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const selectedText = sel.toString();
+        if (!selectedText) {
+          this.showToast('Sorot/blok terlebih dahulu kata yang ingin diubah ke huruf KAPITAL.', 'info');
+          return;
+        }
+        document.execCommand('insertText', false, selectedText.toUpperCase());
+      }
+
+      copyPreviousPassage() {
+        const pkg = this.packages.find((p) => p.id === this.managingPackageId);
+        if (!pkg || !pkg.questions || pkg.questions.length === 0) {
+          this.showToast('Belum ada soal sebelumnya pada paket ini.', 'warning');
+          return;
+        }
+
+        let targetIdx = pkg.questions.length - 1;
+        if (this.editingQuestionId) {
+          const curIdx = pkg.questions.findIndex((q) => q.id === this.editingQuestionId);
+          if (curIdx > 0) targetIdx = curIdx - 1;
+        }
+
+        const prevQ = pkg.questions[targetIdx];
+        if (!prevQ || !stripHtmlToText(prevQ.passage)) {
+          this.showToast('Nomor soal sebelumnya tidak memiliki teks bacaan.', 'warning');
+          return;
+        }
+
+        document.getElementById('editor-passage').innerHTML = sanitizeFormattedHtml(prevQ.passage);
+        this.showToast(`Teks bacaan dari Soal No. ${targetIdx + 1} berhasil disalin.`, 'success');
+      }
+
+      resetQuestionForm() {
+        this.editingQuestionId = null;
+        document.getElementById('qform-heading').textContent = 'Tambah Butir Soal Manual';
+        document.getElementById('qform-edit-badge').classList.add('hidden');
+        document.getElementById('editor-passage').innerHTML = '';
+        document.getElementById('editor-question').innerHTML = '';
+        ['A', 'B', 'C', 'D', 'E'].forEach((k) => {
+          document.getElementById(`editor-opt-${k}`).innerHTML = '';
+        });
+        document.getElementById('qform-correct').value = 'A';
+        document.getElementById('editor-explanation').innerHTML = '';
+      }
+
+      editQuestionInForm(qId) {
+        const pkg = this.packages.find((p) => p.id === this.managingPackageId);
+        if (!pkg) return;
+        const q = (pkg.questions || []).find((item) => item.id === qId);
+        if (!q) return;
+
+        this.editingQuestionId = q.id;
+        document.getElementById('qform-heading').textContent = 'Edit Butir Soal';
+        document.getElementById('qform-edit-badge').classList.remove('hidden');
+
+        document.getElementById('editor-passage').innerHTML = sanitizeFormattedHtml(q.passage || '');
+        document.getElementById('editor-question').innerHTML = sanitizeFormattedHtml(q.question || '');
+        ['A', 'B', 'C', 'D', 'E'].forEach((k) => {
+          document.getElementById(`editor-opt-${k}`).innerHTML = sanitizeFormattedHtml((q.options && q.options[k]) || '');
+        });
+        document.getElementById('qform-correct').value = q.correctAnswer || 'A';
+        document.getElementById('editor-explanation').innerHTML = sanitizeFormattedHtml(q.explanation || '');
+
+        document.getElementById('qform-heading').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      saveManualQuestion() {
+        const pkg = this.packages.find((p) => p.id === this.managingPackageId);
+        if (!pkg) return;
+
+        const passage = sanitizeFormattedHtml(document.getElementById('editor-passage').innerHTML);
+        const question = sanitizeFormattedHtml(document.getElementById('editor-question').innerHTML);
+        const options = {
+          A: sanitizeFormattedHtml(document.getElementById('editor-opt-A').innerHTML),
+          B: sanitizeFormattedHtml(document.getElementById('editor-opt-B').innerHTML),
+          C: sanitizeFormattedHtml(document.getElementById('editor-opt-C').innerHTML),
+          D: sanitizeFormattedHtml(document.getElementById('editor-opt-D').innerHTML),
+          E: sanitizeFormattedHtml(document.getElementById('editor-opt-E').innerHTML)
+        };
+        const correctAnswer = document.getElementById('qform-correct').value;
+        const explanation = sanitizeFormattedHtml(document.getElementById('editor-explanation').innerHTML);
+
+        if (!stripHtmlToText(question)) {
+          this.showToast('Kolom Pertanyaan wajib diisi!', 'error');
+          return;
+        }
+        if (!stripHtmlToText(options.A) || !stripHtmlToText(options.B) || !stripHtmlToText(options.C) || !stripHtmlToText(options.D)) {
+          this.showToast('Minimal Opsi A, B, C, dan D wajib diisi!', 'error');
+          return;
+        }
+        if (correctAnswer === 'E' && !stripHtmlToText(options.E)) {
+          this.showToast('Kunci jawaban E dipilih, tetapi Opsi E masih kosong!', 'error');
+          return;
+        }
+
+        if (!Array.isArray(pkg.questions)) pkg.questions = [];
+
+        if (this.editingQuestionId) {
+          const idx = pkg.questions.findIndex((item) => item.id === this.editingQuestionId);
+          if (idx >= 0) {
+            pkg.questions[idx] = {
+              ...pkg.questions[idx],
+              passage,
+              question,
+              options,
+              correctAnswer,
+              explanation
+            };
+          }
+          this.showToast('Perubahan butir soal berhasil disimpan.', 'success');
+        } else {
+          pkg.questions.push({
+            id: 'q-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+            passage,
+            question,
+            options,
+            correctAnswer,
+            explanation
+          });
+          this.showToast('Butir soal baru berhasil ditambahkan ke paket.', 'success');
+        }
+
+        this.persistPackage(pkg);
+        this.resetQuestionForm();
+        this.renderQuestionListInManager();
+      }
+
+      deleteQuestionFromPackage(qId) {
+        const pkg = this.packages.find((p) => p.id === this.managingPackageId);
+        if (!pkg) return;
+        pkg.questions = (pkg.questions || []).filter((q) => q.id !== qId);
+        this.persistPackage(pkg);
+        if (this.editingQuestionId === qId) this.resetQuestionForm();
+        this.renderQuestionListInManager();
+        this.showToast('Butir soal telah dihapus.', 'info');
+      }
+
+      renderQuestionListInManager() {
+        const pkg = this.packages.find((p) => p.id === this.managingPackageId);
+        if (!pkg) return;
+        const questions = pkg.questions || [];
+
+        const countEl = document.getElementById('qm-questions-count');
+        if (countEl) countEl.textContent = questions.length;
+
+        const listEl = document.getElementById('qm-questions-list');
+        if (!listEl) return;
+
+        if (questions.length === 0) {
+          listEl.innerHTML = `
+            <div class="text-center py-8 text-xs text-slate-500">
+              Belum ada butir soal di paket ini. Silakan isi form di samping untuk menambahkan soal.
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = questions
+          .map((q, idx) => {
+            const hasPassage = Boolean(stripHtmlToText(q.passage));
+            return `
+              <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-indigo-300 transition space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[11px] font-extrabold">No. ${idx + 1}</span>
+                    ${hasPassage ? '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">📖 Berwacana</span>' : ''}
+                    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Kunci: ${q.correctAnswer}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="app.editQuestionInForm('${q.id}')" class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-indigo-50 text-indigo-700 text-xs font-bold">Edit</button>
+                    <button type="button" onclick="app.deleteQuestionFromPackage('${q.id}')" class="px-2 py-1 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-rose-700 text-xs font-bold">Hapus</button>
+                  </div>
+                </div>
+                <div class="formatted-content text-xs text-slate-800 line-clamp-3 leading-relaxed">
+                  ${sanitizeFormattedHtml(q.question)}
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      // ==================== 9. IMPORT OTOMATIS DARI EXCEL, DOCX, DAN PDF ====================
+      downloadExcelTemplate() {
+        if (!window.XLSX) {
+          this.showToast('Library SheetJS belum siap. Periksa koneksi internet Anda.', 'error');
+          return;
+        }
+
+        const sampleRows = [
+          {
+            'Teks Bacaan': '<p>Penggunaan bahasa Indonesia yang baik dan benar dalam karya tulis ilmiah menuntut ketelitian terhadap kaidah <i>Ejaan Bahasa Indonesia yang Disempurnakan (EYD) Edisi V</i>.</p>',
+            'Pertanyaan': 'Penulisan kata serapan yang <b>BAKU</b> sesuai kaidah EYD Edisi V adalah ....',
+            'Opsi A': 'apotik',
+            'Opsi B': 'analisa',
+            'Opsi C': 'diagnosis',
+            'Opsi D': 'resiko',
+            'Opsi E': 'praktek',
+            'Kunci Jawaban': 'C',
+            'Pembahasan': 'Bentuk baku dalam KBBI adalah <b>diagnosis</b>, <i>apotek</i>, <i>analisis</i>, <i>risiko</i>, dan <i>praktik</i>.'
+          }
+        ];
+
+        const ws = window.XLSX.utils.json_to_sheet(sampleRows);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Template_Soal_CAT');
+        window.XLSX.writeFile(wb, 'Template_Import_Soal_CAT_Bahasa_Indonesia.xlsx');
+        this.showToast('Template Excel (.xlsx) berhasil diunduh.', 'success');
+      }
+
+      async handleFileUpload(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const loader = document.getElementById('import-loading-indicator');
+        if (loader) loader.classList.remove('hidden');
+
+        try {
+          const ext = file.name.split('.').pop().toLowerCase();
+          let extracted = [];
+
+          if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+            extracted = await this.parseExcelFile(file);
+          } else if (ext === 'docx') {
+            extracted = await this.parseDocxFile(file);
+          } else if (ext === 'pdf') {
+            extracted = await this.parsePdfFile(file);
+          } else {
+            throw new Error('Format file tidak didukung. Gunakan .xlsx, .xls, .csv, .docx, atau .pdf.');
+          }
+
+          if (!extracted || extracted.length === 0) {
+            throw new Error('Tidak ditemukan butir soal yang valid di dalam dokumen tersebut.');
+          }
+
+          this.importedPreviewQuestions = extracted;
+          const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+          document.getElementById('imp-pkg-title').value = baseName;
+          document.getElementById('imp-pkg-token').value = this.generateRandomToken();
+
+          this.renderImportPreview();
+          this.showToast(`Berhasil mengekstrak ${extracted.length} soal dari dokumen!`, 'success');
+        } catch (err) {
+          console.error(err);
+          this.showToast(err.message || 'Gagal membaca file dokumen.', 'error');
+        } finally {
+          if (loader) loader.classList.add('hidden');
+          event.target.value = '';
+        }
+      }
+
+      async parseExcelFile(file) {
+        const buffer = await file.arrayBuffer();
+        const wb = window.XLSX.read(buffer, { type: 'array' });
+        const firstSheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = window.XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+        return rows
+          .map((row) => {
+            const getCol = (keys) => {
+              for (const k of Object.keys(row)) {
+                const norm = k.trim().toLowerCase();
+                if (keys.includes(norm)) return String(row[k] || '').trim();
+              }
+              return '';
+            };
+
+            const passage = sanitizeFormattedHtml(getCol(['teks bacaan', 'wacana', 'bacaan', 'passage']));
+            const question = sanitizeFormattedHtml(getCol(['pertanyaan', 'soal', 'question']));
+            const optA = sanitizeFormattedHtml(getCol(['opsi a', 'pilihan a', 'a']));
+            const optB = sanitizeFormattedHtml(getCol(['opsi b', 'pilihan b', 'b']));
+            const optC = sanitizeFormattedHtml(getCol(['opsi c', 'pilihan c', 'c']));
+            const optD = sanitizeFormattedHtml(getCol(['opsi d', 'pilihan d', 'd']));
+            const optE = sanitizeFormattedHtml(getCol(['opsi e', 'pilihan e', 'e']));
+            let key = getCol(['kunci jawaban', 'kunci', 'jawaban', 'answer']).toUpperCase().replace(/[^A-E]/g, '');
+            if (!key) key = 'A';
+            const explanation = sanitizeFormattedHtml(getCol(['pembahasan', 'penjelasan', 'explanation']));
+
+            if (!stripHtmlToText(question) || !stripHtmlToText(optA)) return null;
+
+            return {
+              id: 'q-imp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+              passage,
+              question,
+              options: { A: optA, B: optB, C: optC, D: optD, E: optE },
+              correctAnswer: key.charAt(0),
+              explanation
+            };
+          })
+          .filter(Boolean);
+      }
+
+      async parseDocxFile(file) {
+        if (!window.mammoth) throw new Error('Library Mammoth.js tidak tersedia.');
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await window.mammoth.convertToHtml({ arrayBuffer });
+        const html = result.value || '';
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const blocks = Array.from(tempDiv.querySelectorAll('p, li'))
+          .map((el) => sanitizeFormattedHtml(el.innerHTML))
+          .filter((line) => stripHtmlToText(line).length > 0);
+
+        return this.parseStructuredBlocksToQuestions(blocks);
+      }
+
+      async parsePdfFile(file) {
+        if (!window.pdfjsLib) throw new Error('Library PDF.js tidak tersedia.');
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const lines = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const content = await page.getTextContent();
+          let currentLine = '';
+          let lastY = null;
+
+          for (const item of content.items) {
+            const y = item.transform ? Math.round(item.transform[5]) : null;
+            if (lastY !== null && y !== null && Math.abs(y - lastY) > 6) {
+              if (stripHtmlToText(currentLine)) lines.push(sanitizeFormattedHtml(currentLine));
+              currentLine = '';
+            }
+            lastY = y;
+
+            let str = escapeHtmlText(item.str || '');
+            const fontName = (item.fontName || '').toLowerCase();
+            if (fontName.includes('bold') && fontName.includes('italic')) {
+              str = `<b><i>${str}</i></b>`;
+            } else if (fontName.includes('bold')) {
+              str = `<b>${str}</b>`;
+            } else if (fontName.includes('italic') || fontName.includes('oblique')) {
+              str = `<i>${str}</i>`;
+            }
+            currentLine += str + ' ';
+          }
+          if (stripHtmlToText(currentLine)) {
+            lines.push(sanitizeFormattedHtml(currentLine));
+          }
+        }
+
+        return this.parseStructuredBlocksToQuestions(lines);
+      }
+
+      parseStructuredBlocksToQuestions(blocks) {
+        const questions = [];
+        let sharedPassage = '';
+        let current = null;
+
+        const pushCurrent = () => {
+          if (current && stripHtmlToText(current.question) && stripHtmlToText(current.options.A)) {
+            questions.push({
+              id: 'q-doc-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+              passage: current.passage || sharedPassage,
+              question: current.question,
+              options: current.options,
+              correctAnswer: current.correctAnswer || 'A',
+              explanation: current.explanation || ''
+            });
+          }
+          current = null;
+        };
+
+        for (const htmlLine of blocks) {
+          const plain = stripHtmlToText(htmlLine);
+
+          if (/^(wacana|teks\s*bacaan|bacaan)\s*[:.-]/i.test(plain)) {
+            pushCurrent();
+            sharedPassage = htmlLine.replace(/^(<[^>]+>)*\s*(wacana|teks\s*bacaan|bacaan)\s*[:.-]\s*/i, '');
+            continue;
+          }
+
+          if (/^\d+[\.\)]\s+/.test(plain)) {
+            pushCurrent();
+            const qClean = htmlLine.replace(/^(<[^>]+>)*\s*\d+[\.\)]\s*/, '');
+            current = {
+              passage: sharedPassage,
+              question: qClean,
+              options: { A: '', B: '', C: '', D: '', E: '' },
+              correctAnswer: 'A',
+              explanation: ''
+            };
+            continue;
+          }
+
+          if (!current) {
+            sharedPassage = sharedPassage ? `${sharedPassage}<p>${htmlLine}</p>` : `<p>${htmlLine}</p>`;
+            continue;
+          }
+
+          const optMatch = plain.match(/^([A-E])[\.\)]\s+/i);
+          if (optMatch) {
+            const letter = optMatch[1].toUpperCase();
+            current.options[letter] = htmlLine.replace(/^(<[^>]+>)*\s*[A-E][\.\)]\s*/i, '');
+            continue;
+          }
+
+          const keyMatch = plain.match(/^(kunci(\s*jawaban)?|jawaban)\s*[:.-]\s*([A-E])/i);
+          if (keyMatch) {
+            current.correctAnswer = keyMatch[3].toUpperCase();
+            continue;
+          }
+
+          if (/^(pembahasan|penjelasan)\s*[:.-]/i.test(plain)) {
+            current.explanation = htmlLine.replace(/^(<[^>]+>)*\s*(pembahasan|penjelasan)\s*[:.-]\s*/i, '');
+            continue;
+          }
+
+          if (current.explanation) {
+            current.explanation += `<br/>${htmlLine}`;
+          } else if (!stripHtmlToText(current.options.A)) {
+            current.question += `<br/>${htmlLine}`;
+          }
+        }
+
+        pushCurrent();
+        return questions;
+      }
+
+      populateExistingPackageSelect() {
+        const sel = document.getElementById('imp-existing-pkg-select');
+        if (!sel) return;
+        if (this.packages.length === 0) {
+          sel.innerHTML = '<option value="">(Belum ada paket tersedia)</option>';
+          return;
+        }
+        sel.innerHTML = this.packages
+          .map((p) => `<option value="${p.id}">${escapeHtmlText(p.title)} (${p.category})</option>`)
+          .join('');
+      }
+
+      toggleImportTargetMode() {
+        const mode = document.querySelector('input[name="import-target-mode"]:checked')?.value || 'new';
+        const newFields = document.getElementById('import-new-pkg-fields');
+        const extFields = document.getElementById('import-existing-pkg-fields');
+        if (mode === 'new') {
+          newFields.classList.remove('hidden');
+          extFields.classList.add('hidden');
+        } else {
+          newFields.classList.add('hidden');
+          extFields.classList.remove('hidden');
+          this.populateExistingPackageSelect();
+        }
+      }
+
+      renderImportPreview() {
+        const section = document.getElementById('import-preview-section');
+        const countEl = document.getElementById('preview-extracted-count');
+        const listEl = document.getElementById('import-preview-list');
+        if (!section || !listEl) return;
+
+        section.classList.remove('hidden');
+        if (countEl) countEl.textContent = this.importedPreviewQuestions.length;
+
+        listEl.innerHTML = this.importedPreviewQuestions
+          .map((q, idx) => {
+            return `
+              <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Soal #${idx + 1}</span>
+                  <span class="px-2.5 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">Kunci: ${q.correctAnswer}</span>
+                </div>
+                ${
+                  stripHtmlToText(q.passage)
+                    ? `<div class="p-3 rounded-xl bg-white border border-slate-200 text-xs font-serif text-slate-700 formatted-content max-h-32 overflow-y-auto custom-scroll">${sanitizeFormattedHtml(q.passage)}</div>`
+                    : ''
+                }
+                <div class="formatted-content text-sm font-semibold text-slate-900">${sanitizeFormattedHtml(q.question)}</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                  ${['A', 'B', 'C', 'D', 'E']
+                    .filter((k) => k !== 'E' || stripHtmlToText(q.options.E))
+                    .map(
+                      (k) => `
+                        <div class="px-3 py-1.5 rounded-lg border ${k === q.correctAnswer ? 'bg-emerald-50 border-emerald-300 font-bold text-emerald-950' : 'bg-white border-slate-200 text-slate-700'}">
+                          <span class="font-extrabold mr-1">${k}.</span>
+                          <span class="formatted-content">${sanitizeFormattedHtml(q.options[k])}</span>
+                        </div>
+                      `
+                    )
+                    .join('')}
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+      }
+
+      cancelImportPreview() {
+        this.importedPreviewQuestions = [];
+        const section = document.getElementById('import-preview-section');
+        if (section) section.classList.add('hidden');
+      }
+
+      confirmSaveImportedQuestions() {
+        if (!this.importedPreviewQuestions || this.importedPreviewQuestions.length === 0) return;
+        const mode = document.querySelector('input[name="import-target-mode"]:checked')?.value || 'new';
+
+        if (mode === 'existing') {
+          const targetId = document.getElementById('imp-existing-pkg-select').value;
+          const pkg = this.packages.find((p) => p.id === targetId);
+          if (!pkg) {
+            this.showToast('Pilih paket tujuan terlebih dahulu.', 'error');
+            return;
+          }
+          if (!Array.isArray(pkg.questions)) pkg.questions = [];
+          pkg.questions.push(...this.importedPreviewQuestions);
+          this.persistPackage(pkg);
+          this.showToast(`${this.importedPreviewQuestions.length} soal berhasil ditambahkan ke paket "${pkg.title}".`, 'success');
+        } else {
+          const title = document.getElementById('imp-pkg-title').value.trim();
+          const category = document.getElementById('imp-pkg-category').value;
+          const duration = Math.max(1, parseInt(document.getElementById('imp-pkg-duration').value, 10) || 30);
+          const token = document.getElementById('imp-pkg-token').value.trim().toUpperCase() || this.generateRandomToken();
+          const status = document.getElementById('imp-pkg-status').value;
+          const showExplanation = document.getElementById('imp-pkg-explanation').checked;
+
+          if (!title) {
+            this.showToast('Judul paket soal baru wajib diisi!', 'error');
+            return;
+          }
+
+          const newPkg = {
+            id: 'pkg-' + Date.now(),
+            title,
+            category,
+            duration,
+            token,
+            status,
+            showExplanation,
+            createdAt: new Date().toISOString(),
+            questions: [...this.importedPreviewQuestions]
+          };
+          this.persistPackage(newPkg);
+          this.showToast(`Paket baru "${title}" berisi ${newPkg.questions.length} soal berhasil disimpan!`, 'success');
+        }
+
+        this.cancelImportPreview();
+        this.setAdminTab('packages');
+      }
+
+      // ==================== 10. REKAP NILAI, PELANGGARAN & BACKUP ====================
+      renderScoresAdminView() {
+        const filterEl = document.getElementById('scores-package-filter');
+        if (filterEl) {
+          const currentVal = filterEl.value || 'ALL';
+          filterEl.innerHTML =
+            '<option value="ALL">Semua Paket Soal</option>' +
+            this.packages
+              .map((p) => `<option value="${p.id}" ${p.id === currentVal ? 'selected' : ''}>${escapeHtmlText(p.title)}</option>`)
+              .join('');
+        }
+        this.renderScoresTable();
+      }
+
+      getFilteredResults() {
+        const filterVal = document.getElementById('scores-package-filter')?.value || 'ALL';
+        if (filterVal === 'ALL') return this.results;
+        return this.results.filter((r) => r.packageId === filterVal);
+      }
+
+      renderScoresTable() {
+        const filtered = this.getFilteredResults();
+        const summaryEl = document.getElementById('scores-summary-cards');
+        const tbody = document.getElementById('scores-table-body');
+        if (!tbody) return;
+
+        const totalAttempt = filtered.length;
+        const avgScore =
+          totalAttempt > 0
+            ? Math.round(filtered.reduce((acc, item) => acc + Number(item.score || 0), 0) / totalAttempt)
+            : 0;
+        const bannedCount = filtered.filter((item) => item.isBanned || (item.violationCount || 0) >= 3).length;
+
+        if (summaryEl) {
+          summaryEl.innerHTML = `
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <span class="text-xs text-slate-500 block">Total Pengerjaan</span>
+              <strong class="text-xl font-extrabold text-slate-900">${totalAttempt} Siswa</strong>
+            </div>
+            <div class="bg-indigo-50/70 rounded-xl p-4 border border-indigo-200">
+              <span class="text-xs text-indigo-700 block">Rata-rata Skor</span>
+              <strong class="text-xl font-extrabold text-indigo-900">${avgScore} / 100</strong>
+            </div>
+            <div class="bg-rose-50/70 rounded-xl p-4 border border-rose-200">
+              <span class="text-xs text-rose-700 block">Terkena Banned (3x Pelanggaran)</span>
+              <strong class="text-xl font-extrabold text-rose-800">${bannedCount} Siswa</strong>
+            </div>
+          `;
+        }
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" class="py-8 text-center text-xs sm:text-sm text-slate-500">
+                Belum ada data pengerjaan siswa pada filter ini.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map((r, idx) => {
+            const vCount = Number(r.violationCount || 0);
+            const isBanned = Boolean(r.isBanned) || vCount >= 3;
+            const statusText =
+              r.examStatus ||
+              (isBanned
+                ? `${vCount} kali pelanggaran - BANNED`
+                : `${vCount} kali pelanggaran - Selesai Normal`);
+
+            const violationBadge = isBanned
+              ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">⛔ ${escapeHtmlText(statusText)}</span>`
+              : vCount > 0
+              ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">⚠️ ${escapeHtmlText(statusText)}</span>`
+              : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">🛡️ ${escapeHtmlText(statusText)}</span>`;
+
+            return `
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 text-xs font-bold text-slate-500">${idx + 1}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">${escapeHtmlText(r.studentName)}</td>
+                <td class="py-3 px-4 text-xs font-semibold text-slate-700">${escapeHtmlText(r.studentClass || '-')}</td>
+                <td class="py-3 px-4 text-xs text-slate-700 max-w-xs truncate">${escapeHtmlText(r.packageTitle)}</td>
+                <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">${formatDateIndo(r.finishedAt)}</td>
+                <td class="py-3 px-4 text-xs">${violationBadge}</td>
+                <td class="py-3 px-4 text-center text-xs font-semibold">
+                  <span class="text-emerald-700">${r.correctCount}B</span> / <span class="text-rose-700">${r.wrongCount}S</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <span class="px-2.5 py-1 rounded-lg font-extrabold text-xs bg-indigo-50 text-indigo-800 border border-indigo-200">${r.score}</span>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <button
+                    type="button"
+                    onclick="app.removeResultFromDb('${r.id}'); app.renderScoresTable(); app.showToast('Data nilai dihapus.', 'info');"
+                    class="px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      exportScoresFile(format = 'xlsx') {
+        if (!window.XLSX) {
+          this.showToast('Library SheetJS belum siap.', 'error');
+          return;
+        }
+        const filtered = this.getFilteredResults();
+        if (filtered.length === 0) {
+          this.showToast('Tidak ada data nilai untuk diekspor.', 'warning');
+          return;
+        }
+
+        const rows = filtered.map((r, i) => {
+          const vCount = Number(r.violationCount || 0);
+          const isBanned = Boolean(r.isBanned) || vCount >= 3;
+          return {
+            No: i + 1,
+            'Nama Lengkap Siswa': r.studentName,
+            Kelas: r.studentClass || '-',
+            'Paket Soal': r.packageTitle,
+            Jenjang: r.category,
+            'Waktu Selesai': formatDateIndo(r.finishedAt),
+            'Jumlah Pelanggaran': vCount,
+            'Keterangan Status Ujian': isBanned ? 'BANNED (3x Pelanggaran)' : 'Selesai Normal',
+            'Jawaban Benar': r.correctCount,
+            'Jawaban Salah': r.wrongCount,
+            'Tidak Dijawab': r.blankCount,
+            'Skor Akhir': r.score
+          };
+        });
+
+        const ws = window.XLSX.utils.json_to_sheet(rows);
+        const wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, ws, 'Rekap_Nilai_CAT');
+
+        if (format === 'csv') {
+          window.XLSX.writeFile(wb, 'Rekap_Nilai_CAT_Bahasa_Indonesia.csv', { bookType: 'csv' });
+        } else {
+          window.XLSX.writeFile(wb, 'Rekap_Nilai_CAT_Bahasa_Indonesia.xlsx');
+        }
+        this.showToast(`Laporan berhasil diekspor ke format .${format}.`, 'success');
+      }
+
+      exportBankJson() {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          app: 'CAT Bahasa Indonesia',
+          packages: this.packages
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Backup_Bank_Soal_CAT_Bindo_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('File backup Bank Soal (.json) berhasil diunduh.', 'success');
+      }
+
+      async importBankJson(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const incomingPackages = Array.isArray(parsed) ? parsed : parsed.packages;
+
+          if (!Array.isArray(incomingPackages)) {
+            throw new Error('Struktur file JSON tidak valid.');
+          }
+
+          this.packages = incomingPackages;
+          this.saveToLocalStorage(STORAGE_KEYS.PACKAGES, this.packages);
+          this.pushPackagesToCloud(false);
+          this.renderAdminPackages();
+          this.showToast(`Berhasil memulihkan ${incomingPackages.length} paket soal dari JSON.`, 'success');
+        } catch (err) {
+          this.showToast(err.message || 'Gagal mengimpor file JSON.', 'error');
+        } finally {
+          event.target.value = '';
+        }
+      }
+
+      // ==================== 11. PENGATURAN FIREBASE CLOUD & EKSPOR HOSTING ====================
+      renderCloudSettingsPanel() {
+        const urlInput = document.getElementById('cloud-url-input');
+        const pill = document.getElementById('cloud-panel-status-pill');
+        const detailText = document.getElementById('cloud-connection-detail-text');
+        const activeUrl = this.getActiveFirebaseUrl();
+
+        if (urlInput) urlInput.value = activeUrl;
+
+        if (activeUrl && this.isCloudConnected) {
+          if (pill) {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0';
+            pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Cloud Terhubung';
+          }
+          if (detailText) {
+            detailText.innerHTML = `Terhubung ke <code class="bg-white px-1.5 py-0.5 rounded border font-mono text-xs">${escapeHtmlText(activeUrl)}</code>. Paket soal dan nilai siswa otomatis tersinkronisasi antarperangkat.`;
+          }
+        } else if (activeUrl) {
+          if (pill) {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0';
+            pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> URL Tersimpan (Offline / Belum Sinkron)';
+          }
+          if (detailText) {
+            detailText.textContent = 'URL database sudah tersimpan, tetapi belum berhasil terhubung. Periksa koneksi internet atau Rules Firebase (read/write: true).';
+          }
+        } else {
+          if (pill) {
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0';
+            pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> Mode Lokal';
+          }
+          if (detailText) {
+            detailText.textContent = 'Belum terhubung ke Firebase. Data soal dan nilai siswa saat ini hanya tersimpan di LocalStorage perangkat ini.';
+          }
+        }
+      }
+
+      async connectAndSyncFirebase() {
+        const rawUrl = (document.getElementById('cloud-url-input')?.value || '').trim().replace(/\/+$/, '');
+        if (!rawUrl || !rawUrl.startsWith('https://')) {
+          this.showToast('Masukkan URL Firebase Realtime Database yang valid (diawali https://).', 'error');
+          return;
+        }
+
+        localStorage.setItem(STORAGE_KEYS.FIREBASE_URL, rawUrl);
+        this.updateCloudStatusBadge('syncing', 'Menghubungkan...');
+
+        try {
+          const checkRes = await fetch(`${rawUrl}/packages.json`, { cache: 'no-store' });
+          if (!checkRes.ok) {
+            throw new Error(`Server merespons HTTP ${checkRes.status}. Pastikan Rules Firebase diatur ke test mode.`);
+          }
+          const existingCloud = await checkRes.json();
+          if (!existingCloud) {
+            // Unggah paket awal dari perangkat admin ke Firebase jika cloud masih kosong
+            await this.pushPackagesToCloud(false);
+          } else {
+            await this.syncFromCloud(false);
+          }
+          await this.fetchResultsFromCloud(false);
+          this.updateCloudStatusBadge('connected', 'Cloud Terhubung');
+          this.renderCloudSettingsPanel();
+          this.showToast('Berhasil terhubung dan menyinkronkan data dengan Firebase Cloud!', 'success');
+        } catch (err) {
+          this.updateCloudStatusBadge('local', 'Mode Lokal');
+          this.renderCloudSettingsPanel();
+          this.showToast(err.message || 'Gagal terhubung ke Firebase Database.', 'error');
+        }
+      }
+
+      disconnectFirebase() {
+        localStorage.removeItem(STORAGE_KEYS.FIREBASE_URL);
+        this.updateCloudStatusBadge('local', 'Mode Lokal');
+        this.renderCloudSettingsPanel();
+        this.showToast('Koneksi Firebase diputuskan. Aplikasi kembali ke Mode Lokal.', 'info');
+      }
+
+      downloadHostingReadyHtml() {
+        const activeUrl = (document.getElementById('cloud-url-input')?.value || this.getActiveFirebaseUrl()).trim().replace(/\/+$/, '');
+        let fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+        if (activeUrl) {
+          fullHtml = fullHtml.replace(
+            /const DEFAULT_FIREBASE_URL = ".*?";/,
+            `const DEFAULT_FIREBASE_URL = "${activeUrl}";`
+          );
+        }
+
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.html';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        this.showToast(
+          activeUrl
+            ? 'File index.html dengan koneksi Firebase tertanam berhasil diunduh!'
+            : 'File index.html siap hosting berhasil diunduh!',
+          'success'
+        );
+      }
+    }
+
+    // Inisialisasi instance aplikasi global
+    window.app = new CATBahasaApp();
+  </script>
+</body>
+</html>

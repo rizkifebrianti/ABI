@@ -1,0 +1,6 @@
+{
+  "name": "CAT Bahasa Indonesia",
+  "description": "Portal Ujian Berbasis Komputer (CAT) & Administrasi Bank Soal Bimbingan Belajar Bahasa Indonesia (EYD Edisi V).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
